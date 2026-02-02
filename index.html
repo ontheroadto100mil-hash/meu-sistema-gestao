@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Completo - Finanças & Rotina</title>
+    
+    <!-- PWA Config -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Fontes -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Container Principal -->
+    <div class="container">
+        <!-- Cabeçalho com Data -->
+        <header class="header">
+            <div class="date-display">
+                <h1 id="currentDate">JANEIRO 2026</h1>
+                <p id="currentDay">Sábado, 24 de Janeiro</p>
+            </div>
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </header>
+
+        <!-- Navegação por Abas -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="finances">
+                <i class="fas fa-wallet"></i> Finanças
+            </button>
+            <button class="tab" data-tab="routine">
+                <i class="fas fa-tasks"></i> Rotina
+            </button>
+            <button class="tab" data-tab="atlas">
+                <i class="fas fa-map"></i> Atlas
+            </button>
+            <button class="tab" data-tab="goals">
+                <i class="fas fa-bullseye"></i> Metas
+            </button>
+            <button class="tab" data-tab="menu">
+                <i class="fas fa-bars"></i> Menu
+            </button>
+        </nav>
+
+        <!-- Conteúdo das Abas -->
+        <main class="content">
+            <!-- ABA: FINANÇAS -->
+            <section id="finances-tab" class="tab-content active">
+                <div class="finance-dashboard">
+                    <!-- Resumo Financeiro -->
+                    <div class="finance-summary">
+                        <div class="summary-card income">
+                            <h3>R$ 100.000,00</h3>
+                            <p>ENTRADAS</p>
+                            <div class="change positive">
+                                <i class="fas fa-arrow-up"></i> +R$ 38.338,00
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card expense">
+                            <h3>R$ 1.998,43</h3>
+                            <p>SAÍDAS</p>
+                            <div class="expense-detail">
+                                <p>R$ 38.338,00</p>
+                                <small>RESERVA INICIAL</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Saldo Total -->
+                    <div class="total-balance">
+                        <h2>R$ 136.339,57</h2>
+                        <p>SALDO TOTAL</p>
+                    </div>
+
+                    <!-- Economia -->
+                    <div class="savings-card">
+                        <div class="savings-header">
+                            <span>%</span>
+                            <h3>+98.0%</h3>
+                        </div>
+                        <p>ECONOMIZOU</p>
+                    </div>
+
+                    <!-- Orçamento Mensal -->
+                    <div class="budget-card">
+                        <h3>Orçamento Mensal</h3>
+                        <p>R$ 1.998,43 gastos de R$ 5.000,00</p>
+                        <div class="budget-bar">
+                            <div class="budget-progress" style="width: 40%"></div>
+                        </div>
+                        <p class="remaining">Restante: R$ 3.001,57</p>
+                    </div>
+
+                    <!-- Gastos por Categoria -->
+                    <div class="categories-card">
+                        <h3>GASTOS POR CATEGORIA</h3>
+                        <div class="categories-list">
+                            <div class="category-item">
+                                <div class="category-color" style="background-color: #4f46e5;"></div>
+                                <span>Marília</span>
+                                <span class="category-value">R$ 800,00</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-color" style="background-color: #10b981;"></div>
+                                <span>Alimentação</span>
+                                <span class="category-value">R$ 450,00</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-color" style="background-color: #f59e0b;"></div>
+                                <span>Transporte</span>
+                                <span class="category-value">R$ 300,00</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-color" style="background-color: #ef4444;"></div>
+                                <span>Lazer</span>
+                                <span class="category-value">R$ 200,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transações Recentes -->
+                    <div class="transactions-card">
+                        <h3>TRANSAÇÕES RECENTES</h3>
+                        <div class="transaction-list" id="transactionList">
+                            <!-- Preenchido por JavaScript -->
+                        </div>
+                        <button class="btn-add-transaction" onclick="showAddTransactionModal()">
+                            <i class="fas fa-plus"></i> Nova Transação
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: ROTINA -->
+            <section id="routine-tab" class="tab-content">
+                <div class="routine-dashboard">
+                    <!-- Estatísticas da Rotina -->
+                    <div class="routine-stats">
+                        <div class="stat-card">
+                            <h4>MAIS FEITO</h4>
+                            <h3>Devocional</h3>
+                            <p>20x</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>MÊS</h4>
+                            <h3>Janeiro</h3>
+                            <p>10 ativos</p>
+                        </div>
+                    </div>
+
+                    <!-- Hoje -->
+                    <div class="today-section">
+                        <div class="today-header">
+                            <h3 id="todayDate">HOJE - Sábado, 24 de Janeiro</h3>
+                            <div class="today-progress">
+                                <span id="todayCompleted">1/7</span>
+                                <span id="todayPercentage">14%</span>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Hábitos -->
+                        <div class="habits-list" id="habitsList">
+                            <!-- Hábitos serão carregados aqui -->
+                        </div>
+
+                        <!-- Adicionar Novo Hábito -->
+                        <div class="add-habit">
+                            <input type="text" id="newHabitInput" placeholder="Novo hábito...">
+                            <input type="number" id="habitPoints" placeholder="Pontos" min="1" max="100" value="25">
+                            <button onclick="addNewHabit()">
+                                <i class="fas fa-plus"></i> Adicionar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas da Semana -->
+                    <div class="week-stats">
+                        <h3>ESTATÍSTICAS DA SEMANA</h3>
+                        <div class="week-bars">
+                            <div class="day-bar" data-day="Seg" data-value="80"></div>
+                            <div class="day-bar" data-day="Ter" data-value="60"></div>
+                            <div class="day-bar" data-day="Qua" data-value="90"></div>
+                            <div class="day-bar" data-day="Qui" data-value="40"></div>
+                            <div class="day-bar" data-day="Sex" data-value="70"></div>
+                            <div class="day-bar" data-day="Sáb" data-value="14" class="active"></div>
+                            <div class="day-bar" data-day="Dom" data-value="0"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: ATLAS -->
+            <section id="atlas-tab" class="tab-content">
+                <div class="atlas-dashboard">
+                    <h2>TRILHA DO CONHECIMENTO</h2>
+                    
+                    <div class="trail-card">
+                        <div class="trail-header">
+                            <h3>TRILHA A - FRANCÊS 90 DIAS</h3>
+                            <div class="trail-progress">
+                                <span>Progresso: </span>
+                                <span class="progress-value">45%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="trail-timeline">
+                            <!-- Linha do tempo será gerada por JS -->
+                        </div>
+                        
+                        <div class="trail-stats">
+                            <div class="trail-stat">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Dias Concluídos: <strong>40/90</strong></span>
+                            </div>
+                            <div class="trail-stat">
+                                <i class="fas fa-fire"></i>
+                                <span>Sequência Atual: <strong>12 dias</strong></span>
+                            </div>
+                            <div class="trail-stat">
+                                <i class="fas fa-trophy"></i>
+                                <span>Nível: <strong>Intermediário</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-trail">
+                        <h3>NOVA TRILHA</h3>
+                        <input type="text" id="trailName" placeholder="Nome da Trilha (ex: Inglês 30 dias)">
+                        <input type="number" id="trailDays" placeholder="Total de dias" min="1" max="365">
+                        <button onclick="createNewTrail()">
+                            <i class="fas fa-plus-circle"></i> Criar Nova Trilha
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: METAS -->
+            <section id="goals-tab" class="tab-content">
+                <div class="goals-dashboard">
+                    <h2>METAS E OBJETIVOS</h2>
+                    
+                    <div class="goals-grid">
+                        <!-- Metas serão carregadas aqui -->
+                    </div>
+                    
+                    <div class="add-goal-card">
+                        <h3><i class="fas fa-plus-circle"></i> ADICIONAR NOVA META</h3>
+                        <div class="goal-form">
+                            <input type="text" id="goalTitle" placeholder="Título da meta">
+                            <textarea id="goalDescription" placeholder="Descrição detalhada"></textarea>
+                            <div class="goal-options">
+                                <select id="goalCategory">
+                                    <option value="finance">💰 Financeira</option>
+                                    <option value="health">🏃 Saúde</option>
+                                    <option value="learning">📚 Aprendizado</option>
+                                    <option value="personal">🌟 Pessoal</option>
+                                </select>
+                                <input type="date" id="goalDeadline">
+                                <input type="number" id="goalValue" placeholder="Valor (R$)" min="0">
+                            </div>
+                            <button onclick="addNewGoal()" class="btn-save-goal">
+                                <i class="fas fa-save"></i> Salvar Meta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: MENU -->
+            <section id="menu-tab" class="tab-content">
+                <div class="menu-dashboard">
+                    <div class="profile-card">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <h3>Seu Perfil</h3>
+                        <p>Membro desde Janeiro 2026</p>
+                    </div>
+                    
+                    <div class="menu-options">
+                        <div class="menu-item" onclick="showConfig()">
+                            <i class="fas fa-cog"></i>
+                            <span>Configurações</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="exportAllData()">
+                            <i class="fas fa-download"></i>
+                            <span>Exportar Dados</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="importData()">
+                            <i class="fas fa-upload"></i>
+                            <span>Importar Dados</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="clearAllData()">
+                            <i class="fas fa-trash"></i>
+                            <span>Limpar Dados</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="toggleTheme()">
+                            <i class="fas fa-moon"></i>
+                            <span>Alternar Tema</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="showAbout()">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Sobre o App</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="app-stats">
+                        <h4>ESTATÍSTICAS DO APP</h4>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalHabits">0</span>
+                                <span class="stat-label">Hábitos</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalTransactions">0</span>
+                                <span class="stat-label">Transações</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalGoals">0</span>
+                                <span class="stat-label">Metas</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalDays">0</span>
+                                <span class="stat-label">Dias Ativos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: Adicionar Transação -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nova Transação</h3>
+                <button class="close-modal" onclick="closeTransactionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="modalTransactionType">
+                        <option value="income">Entrada (Receita)</option>
+                        <option value="expense">Saída (Despesa)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="modalTransactionDesc" placeholder="Ex: Salário, Supermercado...">
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="modalTransactionCategory">
+                        <option value="salary">Salário</option>
+                        <option value="food">Alimentação</option>
+                        <option value="transport">Transporte</option>
+                        <option value="entertainment">Lazer</option>
+                        <option value="health">Saúde</option>
+                        <option value="education">Educação</option>
+                        <option value="other">Outros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="modalTransactionAmount" placeholder="0,00" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="modalTransactionDate" value="">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeTransactionModal()">Cancelar</button>
+                <button class="btn-save" onclick="saveTransaction()">Salvar Transação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST Notificações -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
