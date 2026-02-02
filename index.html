@@ -3,200 +3,411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Sistema de Gestão</title>
+    <title>Dashboard Completo - Finanças & Rotina</title>
     
-    <!-- ===== PWA CONFIGURAÇÕES ===== -->
-    <!-- Tema e cores -->
-    <meta name="theme-color" content="#00ff00">
-    <meta name="msapplication-TileColor" content="#00ff00">
-    
-    <!-- Capacidade de App -->
+    <!-- PWA Config -->
+    <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    
-    <!-- Status Bar iOS -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <!-- Título para iOS -->
-    <meta name="apple-mobile-web-app-title" content="Dashboard">
-    
-    <!-- ===== ÍCONES ===== -->
-    <!-- Favicon padrão -->
-    <link rel="icon" type="image/png" href="https://img.icons8.com/color/96/000000/dashboard.png">
-    
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/152/000000/dashboard.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://img.icons8.com/color/180/000000/dashboard.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="https://img.icons8.com/color/167/000000/dashboard.png">
-    
-    <!-- ===== MANIFEST ===== -->
     <link rel="manifest" href="manifest.json">
     
-    <!-- ===== CSS ===== -->
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- ===== FONTE ===== -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- ===== META TAGS PARA SEO ===== -->
-    <meta name="description" content="Dashboard pessoal para gestão de tarefas, finanças, hábitos e metas">
-    <meta name="keywords" content="dashboard, produtividade, tarefas, finanças, hábitos, metas">
-    <meta name="author" content="Meu Sistema de Gestão">
+    <!-- Fontes -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Open Graph (para redes sociais) -->
-    <meta property="og:title" content="Meu Sistema de Gestão">
-    <meta property="og:description" content="Dashboard pessoal de produtividade">
-    <meta property="og:image" content="https://img.icons8.com/color/512/000000/dashboard.png">
-    <meta property="og:url" content="https://ontheroadto100mil-hash.github.io/meu-sistema-gestao/">
-    <meta property="og:type" content="website">
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Meu Sistema de Gestão">
-    <meta name="twitter:description" content="Dashboard pessoal de produtividade">
-    <meta name="twitter:image" content="https://img.icons8.com/color/512/000000/dashboard.png">
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Container Principal -->
     <div class="container">
-        <!-- Dashboard Principal -->
-        <header class="dashboard">
-            <h1>📊 Meu Dashboard</h1>
-            <div class="stats">
-                <div class="stat-card">
-                    <span class="stat-label">XP Total</span>
-                    <span class="stat-value" id="totalXP">0</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-label">Rank</span>
-                    <span class="stat-value" id="currentRank">RECRUTA</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-label">Saldo</span>
-                    <span class="stat-value" id="currentBalance">R$ 0</span>
-                </div>
+        <!-- Cabeçalho com Data -->
+        <header class="header">
+            <div class="date-display">
+                <h1 id="currentDate">JANEIRO 2026</h1>
+                <p id="currentDay">Sábado, 24 de Janeiro</p>
+            </div>
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
             </div>
         </header>
 
-        <!-- Abas/Navegação -->
+        <!-- Navegação por Abas -->
         <nav class="tabs">
-            <button class="tab active" data-tab="tasks">📋 Tarefas</button>
-            <button class="tab" data-tab="finances">💰 Finanças</button>
-            <button class="tab" data-tab="habits">⚡ Hábitos</button>
-            <button class="tab" data-tab="goals">🎯 Metas</button>
+            <button class="tab active" data-tab="finances">
+                <i class="fas fa-wallet"></i> Finanças
+            </button>
+            <button class="tab" data-tab="routine">
+                <i class="fas fa-tasks"></i> Rotina
+            </button>
+            <button class="tab" data-tab="atlas">
+                <i class="fas fa-map"></i> Atlas
+            </button>
+            <button class="tab" data-tab="goals">
+                <i class="fas fa-bullseye"></i> Metas
+            </button>
+            <button class="tab" data-tab="menu">
+                <i class="fas fa-bars"></i> Menu
+            </button>
         </nav>
 
         <!-- Conteúdo das Abas -->
-        <main>
-            <!-- ABA: Tarefas -->
-            <section id="tasks-tab" class="tab-content active">
-                <h2>Tarefas de Hoje</h2>
-                <div class="task-input">
-                    <input type="text" id="newTask" placeholder="Nova tarefa...">
-                    <button onclick="addTask()">+</button>
-                </div>
-                <ul id="taskList"></ul>
-                <div class="progress">
-                    <div class="progress-bar" id="taskProgress"></div>
-                    <span id="taskCount">0/0 concluídas</span>
-                </div>
-            </section>
-
-            <!-- ABA: Finanças -->
-            <section id="finances-tab" class="tab-content">
-                <h2>Controle Financeiro</h2>
-                <div class="finance-input">
-                    <select id="transactionType">
-                        <option value="income">Receita</option>
-                        <option value="expense">Despesa</option>
-                    </select>
-                    <input type="text" id="transactionDesc" placeholder="Descrição">
-                    <input type="number" id="transactionAmount" placeholder="R$ 0,00">
-                    <button onclick="addTransaction()">Registrar</button>
-                </div>
-                <div class="balance">
-                    <h3>Saldo: <span id="balanceValue">R$ 0,00</span></h3>
-                </div>
-                <ul id="transactionList"></ul>
-            </section>
-
-            <!-- ABA: Hábitos -->
-            <section id="habits-tab" class="tab-content">
-                <h2>Meus Hábitos</h2>
-                <div class="habits-grid" id="habitsGrid"></div>
-                <button class="btn-add" onclick="addHabit()">+ Novo Hábito</button>
-            </section>
-
-            <!-- ABA: Metas -->
-            <section id="goals-tab" class="tab-content">
-                <h2>Sprint de 60 Dias</h2>
-                <div class="goal-card">
-                    <h3>Meta Principal</h3>
-                    <input type="text" id="mainGoal" placeholder="Ex: Aprender Python">
-                    <div class="sprint-progress">
-                        <div class="progress-bar" id="sprintProgress"></div>
-                        <span>Dia <span id="currentDay">1</span>/60</span>
+        <main class="content">
+            <!-- ABA: FINANÇAS -->
+            <section id="finances-tab" class="tab-content active">
+                <div class="finance-dashboard">
+                    <!-- Resumo Financeiro -->
+                    <div class="finance-summary">
+                        <div class="summary-card income">
+                            <h3>R$ 100.000,00</h3>
+                            <p>ENTRADAS</p>
+                            <div class="change positive">
+                                <i class="fas fa-arrow-up"></i> +R$ 38.338,00
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card expense">
+                            <h3>R$ 1.998,43</h3>
+                            <p>SAÍDAS</p>
+                            <div class="expense-detail">
+                                <p>R$ 38.338,00</p>
+                                <small>RESERVA INICIAL</small>
+                            </div>
+                        </div>
                     </div>
-                    <button onclick="updateGoal()">Salvar Meta</button>
+
+                    <!-- Saldo Total -->
+                    <div class="total-balance">
+                        <h2>R$ 136.339,57</h2>
+                        <p>SALDO TOTAL</p>
+                    </div>
+
+                    <!-- Economia -->
+                    <div class="savings-card">
+                        <div class="savings-header">
+                            <span>%</span>
+                            <h3>+98.0%</h3>
+                        </div>
+                        <p>ECONOMIZOU</p>
+                    </div>
+
+                    <!-- Orçamento Mensal -->
+                    <div class="budget-card">
+                        <h3>Orçamento Mensal</h3>
+                        <p>R$ 1.998,43 gastos de R$ 5.000,00</p>
+                        <div class="budget-bar">
+                            <div class="budget-progress" style="width: 40%"></div>
+                        </div>
+                        <p class="remaining">Restante: R$ 3.001,57</p>
+                    </div>
+
+                    <!-- Gastos por Categoria -->
+                    <div class="categories-card">
+                        <h3>GASTOS POR CATEGORIA</h3>
+                        <div class="categories-list">
+                            <div class="category-item">
+                                <div class="category-color" style="background-color: #4f46e5;"></div>
+                                <span>Marília</span>
+                                <span class="category-value">R$ 800,00</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-color" style="background-color: #10b981;"></div>
+                                <span>Alimentação</span>
+                                <span class="category-value">R$ 450,00</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-color" style="background-color: #f59e0b;"></div>
+                                <span>Transporte</span>
+                                <span class="category-value">R$ 300,00</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-color" style="background-color: #ef4444;"></div>
+                                <span>Lazer</span>
+                                <span class="category-value">R$ 200,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transações Recentes -->
+                    <div class="transactions-card">
+                        <h3>TRANSAÇÕES RECENTES</h3>
+                        <div class="transaction-list" id="transactionList">
+                            <!-- Preenchido por JavaScript -->
+                        </div>
+                        <button class="btn-add-transaction" onclick="showAddTransactionModal()">
+                            <i class="fas fa-plus"></i> Nova Transação
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: ROTINA -->
+            <section id="routine-tab" class="tab-content">
+                <div class="routine-dashboard">
+                    <!-- Estatísticas da Rotina -->
+                    <div class="routine-stats">
+                        <div class="stat-card">
+                            <h4>MAIS FEITO</h4>
+                            <h3>Devocional</h3>
+                            <p>20x</p>
+                        </div>
+                        <div class="stat-card">
+                            <h4>MÊS</h4>
+                            <h3>Janeiro</h3>
+                            <p>10 ativos</p>
+                        </div>
+                    </div>
+
+                    <!-- Hoje -->
+                    <div class="today-section">
+                        <div class="today-header">
+                            <h3 id="todayDate">HOJE - Sábado, 24 de Janeiro</h3>
+                            <div class="today-progress">
+                                <span id="todayCompleted">1/7</span>
+                                <span id="todayPercentage">14%</span>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Hábitos -->
+                        <div class="habits-list" id="habitsList">
+                            <!-- Hábitos serão carregados aqui -->
+                        </div>
+
+                        <!-- Adicionar Novo Hábito -->
+                        <div class="add-habit">
+                            <input type="text" id="newHabitInput" placeholder="Novo hábito...">
+                            <input type="number" id="habitPoints" placeholder="Pontos" min="1" max="100" value="25">
+                            <button onclick="addNewHabit()">
+                                <i class="fas fa-plus"></i> Adicionar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas da Semana -->
+                    <div class="week-stats">
+                        <h3>ESTATÍSTICAS DA SEMANA</h3>
+                        <div class="week-bars">
+                            <div class="day-bar" data-day="Seg" data-value="80"></div>
+                            <div class="day-bar" data-day="Ter" data-value="60"></div>
+                            <div class="day-bar" data-day="Qua" data-value="90"></div>
+                            <div class="day-bar" data-day="Qui" data-value="40"></div>
+                            <div class="day-bar" data-day="Sex" data-value="70"></div>
+                            <div class="day-bar" data-day="Sáb" data-value="14" class="active"></div>
+                            <div class="day-bar" data-day="Dom" data-value="0"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: ATLAS -->
+            <section id="atlas-tab" class="tab-content">
+                <div class="atlas-dashboard">
+                    <h2>TRILHA DO CONHECIMENTO</h2>
+                    
+                    <div class="trail-card">
+                        <div class="trail-header">
+                            <h3>TRILHA A - FRANCÊS 90 DIAS</h3>
+                            <div class="trail-progress">
+                                <span>Progresso: </span>
+                                <span class="progress-value">45%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="trail-timeline">
+                            <!-- Linha do tempo será gerada por JS -->
+                        </div>
+                        
+                        <div class="trail-stats">
+                            <div class="trail-stat">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Dias Concluídos: <strong>40/90</strong></span>
+                            </div>
+                            <div class="trail-stat">
+                                <i class="fas fa-fire"></i>
+                                <span>Sequência Atual: <strong>12 dias</strong></span>
+                            </div>
+                            <div class="trail-stat">
+                                <i class="fas fa-trophy"></i>
+                                <span>Nível: <strong>Intermediário</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-trail">
+                        <h3>NOVA TRILHA</h3>
+                        <input type="text" id="trailName" placeholder="Nome da Trilha (ex: Inglês 30 dias)">
+                        <input type="number" id="trailDays" placeholder="Total de dias" min="1" max="365">
+                        <button onclick="createNewTrail()">
+                            <i class="fas fa-plus-circle"></i> Criar Nova Trilha
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: METAS -->
+            <section id="goals-tab" class="tab-content">
+                <div class="goals-dashboard">
+                    <h2>METAS E OBJETIVOS</h2>
+                    
+                    <div class="goals-grid">
+                        <!-- Metas serão carregadas aqui -->
+                    </div>
+                    
+                    <div class="add-goal-card">
+                        <h3><i class="fas fa-plus-circle"></i> ADICIONAR NOVA META</h3>
+                        <div class="goal-form">
+                            <input type="text" id="goalTitle" placeholder="Título da meta">
+                            <textarea id="goalDescription" placeholder="Descrição detalhada"></textarea>
+                            <div class="goal-options">
+                                <select id="goalCategory">
+                                    <option value="finance">💰 Financeira</option>
+                                    <option value="health">🏃 Saúde</option>
+                                    <option value="learning">📚 Aprendizado</option>
+                                    <option value="personal">🌟 Pessoal</option>
+                                </select>
+                                <input type="date" id="goalDeadline">
+                                <input type="number" id="goalValue" placeholder="Valor (R$)" min="0">
+                            </div>
+                            <button onclick="addNewGoal()" class="btn-save-goal">
+                                <i class="fas fa-save"></i> Salvar Meta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA: MENU -->
+            <section id="menu-tab" class="tab-content">
+                <div class="menu-dashboard">
+                    <div class="profile-card">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <h3>Seu Perfil</h3>
+                        <p>Membro desde Janeiro 2026</p>
+                    </div>
+                    
+                    <div class="menu-options">
+                        <div class="menu-item" onclick="showConfig()">
+                            <i class="fas fa-cog"></i>
+                            <span>Configurações</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="exportAllData()">
+                            <i class="fas fa-download"></i>
+                            <span>Exportar Dados</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="importData()">
+                            <i class="fas fa-upload"></i>
+                            <span>Importar Dados</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="clearAllData()">
+                            <i class="fas fa-trash"></i>
+                            <span>Limpar Dados</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="toggleTheme()">
+                            <i class="fas fa-moon"></i>
+                            <span>Alternar Tema</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        
+                        <div class="menu-item" onclick="showAbout()">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Sobre o App</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="app-stats">
+                        <h4>ESTATÍSTICAS DO APP</h4>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalHabits">0</span>
+                                <span class="stat-label">Hábitos</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalTransactions">0</span>
+                                <span class="stat-label">Transações</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalGoals">0</span>
+                                <span class="stat-label">Metas</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="totalDays">0</span>
+                                <span class="stat-label">Dias Ativos</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
-        
-        <!-- Rodapé -->
-        <footer class="footer">
-            <p>📱 Instale como App: No navegador, toque em "Adicionar à tela inicial"</p>
-            <p>✨ Sistema de Gamificação • XP: <span id="footerXP">0</span> • Rank: <span id="footerRank">RECRUTA</span></p>
-        </footer>
     </div>
 
-    <!-- ===== SCRIPTS ===== -->
+    <!-- MODAL: Adicionar Transação -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nova Transação</h3>
+                <button class="close-modal" onclick="closeTransactionModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="modalTransactionType">
+                        <option value="income">Entrada (Receita)</option>
+                        <option value="expense">Saída (Despesa)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <input type="text" id="modalTransactionDesc" placeholder="Ex: Salário, Supermercado...">
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="modalTransactionCategory">
+                        <option value="salary">Salário</option>
+                        <option value="food">Alimentação</option>
+                        <option value="transport">Transporte</option>
+                        <option value="entertainment">Lazer</option>
+                        <option value="health">Saúde</option>
+                        <option value="education">Educação</option>
+                        <option value="other">Outros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="modalTransactionAmount" placeholder="0,00" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Data</label>
+                    <input type="date" id="modalTransactionDate" value="">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeTransactionModal()">Cancelar</button>
+                <button class="btn-save" onclick="saveTransaction()">Salvar Transação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST Notificações -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
     <script src="script.js"></script>
-    
-    <!-- Service Worker Registration -->
-    <script>
-        // Registrar Service Worker para PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(registration => {
-                        console.log('✅ Service Worker registrado:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('❌ Falha no Service Worker:', error);
-                    });
-            });
-        }
-        
-        // Atualizar footer com XP
-        setInterval(() => {
-            const totalXP = localStorage.getItem('totalXP') || 0;
-            const rank = getCurrentRank(totalXP);
-            document.getElementById('footerXP').textContent = totalXP;
-            document.getElementById('footerRank').textContent = rank;
-        }, 5000);
-        
-        function getCurrentRank(xp) {
-            const RANKS = {
-                0: 'RECRUTA',
-                100: 'SOLDADO',
-                500: 'CABO',
-                1000: 'SARGENTO',
-                2500: 'TENENTE',
-                5000: 'CAPITÃO'
-            };
-            
-            xp = parseInt(xp) || 0;
-            let currentRank = 'RECRUTA';
-            
-            for (const [requiredXP, rank] of Object.entries(RANKS)) {
-                if (xp >= parseInt(requiredXP)) {
-                    currentRank = rank;
-                } else {
-                    break;
-                }
-            }
-            
-            return currentRank;
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
