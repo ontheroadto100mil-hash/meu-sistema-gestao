@@ -353,3 +353,21 @@ function incrementSprintDay() {
 
 // Executar ao carregar
 incrementSprintDay();
+// Sistema de Abas
+const tabs = document.querySelectorAll('.tab');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        // Remove classe active de todas as abas
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Adiciona classe active na aba clicada
+        tab.classList.add('active');
+        
+        // Mostra o conteúdo correspondente
+        const tabId = tab.getAttribute('data-tab') + '-tab';
+        document.getElementById(tabId).classList.add('active');
+    });
+});
