@@ -1,4 +1,4 @@
-// Sistema de Gamificação
+// ===== SISTEMA DE GAMIFICAÇÃO =====
 const RANKS = {
     0: 'RECRUTA',
     100: 'SOLDADO',
@@ -8,6 +8,7 @@ const RANKS = {
     5000: 'CAPITÃO'
 };
 
+// Variáveis globais
 let totalXP = parseInt(localStorage.getItem('totalXP')) || 0;
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
@@ -15,7 +16,7 @@ let habits = JSON.parse(localStorage.getItem('habits')) || [];
 let currentGoal = localStorage.getItem('currentGoal') || '';
 let sprintDay = parseInt(localStorage.getItem('sprintDay')) || 1;
 
-// Inicialização
+// ===== INICIALIZAÇÃO =====
 document.addEventListener('DOMContentLoaded', function() {
     updateDashboard();
     loadTasks();
@@ -27,30 +28,78 @@ document.addEventListener('DOMContentLoaded', function() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js');
     }
+    
+    // Configurar inputs para aceitar Enter
+    setupInputEvents();
+    
+    // Inicializar abas
+    showTab('tasks');
 });
 
-// Sistema de Abas
+// ===== SISTEMA DE ABAS =====
 function setupTabs() {
     const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            const tabName = tab.getAttribute('data-tab');
-            showTab(tabName);
+            // Remove classe active de todas as abas
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Adiciona classe active na aba clicada
+            tab.classList.add('active');
+            
+            // Mostra o conteúdo correspondente
+            const tabId = tab.getAttribute('data-tab') + '-tab';
+            document.getElementById(tabId).classList.add('active');
         });
     });
 }
 
 function showTab(tabName) {
-    // Remover classe active de todas as abas
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Remove classe active de todas as abas
+    tabs.forEach(t => t.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
     
     // Ativar aba clicada
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    document.getElementById(`${tabName}-tab`).classList.add('active');
+    const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+    const activeContent = document.getElementById(`${tabName}-tab`);
+    
+    if (activeTab && activeContent) {
+        activeTab.classList.add('active');
+        activeContent.classList.add('active');
+    }
 }
 
-// Sistema de Tarefas
+// ===== CONFIGURAÇÃO DE INPUTS =====
+function setupInputEvents() {
+    // Tarefas: Enter para adicionar
+    document.getElementById('newTask').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addTask();
+        }
+    });
+    
+    // Finanças: Enter para adicionar
+    document.getElementById('transactionAmount').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addTransaction();
+        }
+    });
+    
+    // Metas: Enter para salvar
+    document.getElementById('mainGoal').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            updateGoal();
+        }
+    });
+}
+
+// ===== SISTEMA DE TAREFAS =====
 function addTask() {
     const input = document.getElementById('newTask');
     const text = input.value.trim();
@@ -67,7 +116,11 @@ function addTask() {
         tasks.push(task);
         saveTasks();
         input.value = '';
+        input.focus(); // Mantém foco no input
         loadTasks();
+        
+        // Notificação visual
+        showToast('✅ Tarefa adicionada!');
     }
 }
 
@@ -79,6 +132,7 @@ function toggleTask(id) {
         // Adicionar XP se completou
         if (task.completed) {
             addXP(task.xpValue);
+            showToast(`🎉 +${task.xpValue} XP! Tarefa concluída!`);
         } else {
             addXP(-task.xpValue);
         }
@@ -96,15 +150,28 @@ function loadTasks() {
     
     taskList.innerHTML = '';
     
-    tasks.forEach(task => {
+    // Ordenar: não concluídas primeiro, depois por data
+    const sortedTasks = [...tasks].sort((a, b) => {
+        if (a.completed !== b.completed) {
+            return a.completed ? 1 : -1;
+        }
+        return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+    
+    sortedTasks.forEach(task => {
         const li = document.createElement('li');
         li.className = 'task-item';
         li.innerHTML = `
-            <input type="checkbox" class="task-checkbox" 
-                   ${task.completed ? 'checked' : ''} 
-                   onchange="toggleTask(${task.id})">
+            <div class="task-checkbox-container">
+                <input type="checkbox" class="task-checkbox" 
+                       ${task.completed ? 'checked' : ''} 
+                       onchange="toggleTask(${task.id})"
+                       id="task-${task.id}">
+                <label for="task-${task.id}" class="checkbox-label"></label>
+            </div>
             <span class="task-text ${task.completed ? 'task-completed' : ''}">
                 ${task.text}
+                <span class="task-xp">+${task.xpValue} XP</span>
             </span>
         `;
         taskList.appendChild(li);
@@ -114,20 +181,25 @@ function loadTasks() {
     const progress = totalTasks ? (completedTasks / totalTasks) * 100 : 0;
     document.getElementById('taskProgress').style.width = `${progress}%`;
     document.getElementById('taskCount').textContent = `${completedTasks}/${totalTasks} concluídas`;
+    
+    // Se não houver tarefas, mostrar mensagem
+    if (tasks.length === 0) {
+        taskList.innerHTML = '<li class="empty-message">Nenhuma tarefa adicionada ainda.</li>';
+    }
 }
 
 function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
-// Sistema Financeiro
+// ===== SISTEMA FINANCEIRO =====
 function addTransaction() {
     const type = document.getElementById('transactionType').value;
     const desc = document.getElementById('transactionDesc').value.trim();
     const amount = parseFloat(document.getElementById('transactionAmount').value);
     
     if (!desc || isNaN(amount) || amount <= 0) {
-        alert('Preencha todos os campos corretamente!');
+        showToast('⚠️ Preencha todos os campos corretamente!', 'error');
         return;
     }
     
@@ -149,6 +221,10 @@ function addTransaction() {
     
     // Adicionar XP por controle financeiro
     addXP(5);
+    showToast('💰 Transação registrada! +5 XP');
+    
+    // Focar no próximo campo
+    document.getElementById('transactionDesc').focus();
 }
 
 function loadTransactions() {
@@ -157,7 +233,12 @@ function loadTransactions() {
     
     transactionList.innerHTML = '';
     
-    transactions.slice(-10).reverse().forEach(transaction => {
+    // Ordenar por data (mais recente primeiro)
+    const sortedTransactions = [...transactions].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+    ).slice(0, 10); // Mostrar apenas 10 últimas
+    
+    sortedTransactions.forEach(transaction => {
         const isIncome = transaction.type === 'income';
         balance += isIncome ? transaction.amount : -transaction.amount;
         
@@ -166,7 +247,7 @@ function loadTransactions() {
         li.innerHTML = `
             <div class="transaction-info">
                 <span class="transaction-desc">${transaction.description}</span>
-                <span class="transaction-date">${new Date(transaction.date).toLocaleDateString()}</span>
+                <span class="transaction-date">${new Date(transaction.date).toLocaleDateString('pt-BR')}</span>
             </div>
             <span class="transaction-amount ${isIncome ? 'income' : 'expense'}">
                 ${isIncome ? '+' : '-'} R$ ${transaction.amount.toFixed(2)}
@@ -176,8 +257,14 @@ function loadTransactions() {
     });
     
     // Atualizar saldo
-    document.getElementById('balanceValue').textContent = `R$ ${balance.toFixed(2)}`;
-    document.getElementById('currentBalance').textContent = `R$ ${balance.toFixed(0)}`;
+    const formattedBalance = balance.toFixed(2);
+    document.getElementById('balanceValue').textContent = `R$ ${formattedBalance}`;
+    document.getElementById('currentBalance').textContent = `R$ ${Math.floor(balance)}`;
+    
+    // Se não houver transações, mostrar mensagem
+    if (transactions.length === 0) {
+        transactionList.innerHTML = '<li class="empty-message">Nenhuma transação registrada ainda.</li>';
+    }
     
     saveTransactions();
 }
@@ -186,7 +273,7 @@ function saveTransactions() {
     localStorage.setItem('transactions', JSON.stringify(transactions));
 }
 
-// Sistema de Hábitos
+// ===== SISTEMA DE HÁBITOS =====
 function loadHabits() {
     const habitsGrid = document.getElementById('habitsGrid');
     habitsGrid.innerHTML = '';
@@ -197,14 +284,21 @@ function loadHabits() {
         
         const div = document.createElement('div');
         div.className = 'habit-card';
-        div.onclick = () => toggleHabit(habit.id);
         div.innerHTML = `
             <h4>${habit.name}</h4>
             <div class="habit-streak">${habit.streak} 🔥</div>
-            <div class="habit-status">${completedToday ? '✅ Hoje' : '⚪ Pendente'}</div>
+            <div class="habit-status ${completedToday ? 'completed' : 'pending'}" 
+                 onclick="toggleHabit(${habit.id})">
+                ${completedToday ? '✅ Hoje' : '⚪ Pendente'}
+            </div>
         `;
         habitsGrid.appendChild(div);
     });
+    
+    // Se não houver hábitos, mostrar mensagem
+    if (habits.length === 0) {
+        habitsGrid.innerHTML = '<div class="empty-message">Nenhum hábito cadastrado.</div>';
+    }
 }
 
 function toggleHabit(id) {
@@ -220,16 +314,18 @@ function toggleHabit(id) {
         habit.completions = habit.completions.filter(d => d !== today);
         habit.streak = calculateStreak(habit.completions);
         addXP(-15);
+        showToast(`➖ ${habit.name} desmarcado`, 'warning');
     } else {
         // Adicionar completação
         habit.completions.push(today);
         habit.streak = calculateStreak(habit.completions);
         addXP(15);
+        showToast(`✅ ${habit.name} completado! +15 XP`);
         
         // Bônus por sequência
-        if (habit.streak % 7 === 0) {
+        if (habit.streak % 7 === 0 && habit.streak > 0) {
             addXP(50);
-            alert(`🎉 ${habit.streak} dias seguidos! +50 XP bônus!`);
+            showToast(`🎉 ${habit.streak} dias seguidos! +50 XP bônus!`, 'success');
         }
     }
     
@@ -274,6 +370,7 @@ function addHabit() {
         habits.push(habit);
         saveHabits();
         loadHabits();
+        showToast('⚡ Novo hábito adicionado!');
     }
 }
 
@@ -281,12 +378,20 @@ function saveHabits() {
     localStorage.setItem('habits', JSON.stringify(habits));
 }
 
-// Sistema de Gamificação
+// ===== SISTEMA DE GAMIFICAÇÃO =====
 function addXP(amount) {
+    const oldRank = getCurrentRank();
     totalXP += amount;
     if (totalXP < 0) totalXP = 0;
     
     localStorage.setItem('totalXP', totalXP.toString());
+    
+    // Verificar promoção de rank
+    const newRank = getCurrentRank();
+    if (newRank !== oldRank && amount > 0) {
+        showToast(`🎖️ PROMOÇÃO! Novo rank: ${newRank}`, 'success');
+    }
+    
     updateDashboard();
 }
 
@@ -294,7 +399,12 @@ function getCurrentRank() {
     const xp = totalXP;
     let currentRank = 'RECRUTA';
     
-    for (const [requiredXP, rank] of Object.entries(RANKS)) {
+    // Converter para array e ordenar por XP
+    const rankEntries = Object.entries(RANKS)
+        .map(([xpReq, rank]) => [parseInt(xpReq), rank])
+        .sort((a, b) => a[0] - b[0]);
+    
+    for (const [requiredXP, rank] of rankEntries) {
         if (xp >= requiredXP) {
             currentRank = rank;
         } else {
@@ -311,63 +421,179 @@ function updateDashboard() {
     
     // Atualizar progresso do sprint
     const sprintProgress = (sprintDay / 60) * 100;
-    document.getElementById('sprintProgress').style.width = `${sprintProgress}%`;
-    document.getElementById('currentDay').textContent = sprintDay;
-}
-
-// Sistema de Metas
-function updateGoal() {
-    const goalInput = document.getElementById('mainGoal');
-    currentGoal = goalInput.value;
-    localStorage.setItem('currentGoal', currentGoal);
-    alert('Meta salva!');
-    
-    // Adicionar XP por definir meta
-    addXP(25);
-}
-
-// Sistema de Notificações
-function showNotification(title, message) {
-    if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(title, { body: message });
+    const progressBar = document.getElementById('sprintProgress');
+    if (progressBar) {
+        progressBar.style.width = `${sprintProgress}%`;
+        document.getElementById('currentDay').textContent = sprintDay;
     }
 }
 
-// Incrementar dia do sprint (executar uma vez por dia)
+// ===== SISTEMA DE METAS =====
+function updateGoal() {
+    const goalInput = document.getElementById('mainGoal');
+    currentGoal = goalInput.value.trim();
+    
+    if (!currentGoal) {
+        showToast('Digite uma meta primeiro!', 'warning');
+        return;
+    }
+    
+    localStorage.setItem('currentGoal', currentGoal);
+    
+    // Adicionar XP por definir meta
+    addXP(25);
+    showToast('🎯 Meta definida! +25 XP');
+}
+
+// ===== SISTEMA DE NOTIFICAÇÕES/TOASTS =====
+function showToast(message, type = 'info') {
+    // Remover toast existente
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // Criar novo toast
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = message;
+    
+    // Estilos do toast
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#ff4444' : type === 'success' ? '#00C851' : type === 'warning' ? '#ffbb33' : '#33b5e5'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+        font-weight: bold;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOut 0.3s ease-out';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 3000);
+}
+
+// Adicionar animações CSS para toast
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// ===== SISTEMA DE SPRINT =====
 function incrementSprintDay() {
     const lastUpdate = localStorage.getItem('lastSprintUpdate');
     const today = new Date().toDateString();
     
     if (lastUpdate !== today) {
         sprintDay++;
-        if (sprintDay > 60) sprintDay = 1; // Reiniciar sprint
+        if (sprintDay > 60) {
+            sprintDay = 1;
+            showToast('🎉 Sprint reiniciado! Novo ciclo começou!', 'success');
+        }
         
         localStorage.setItem('sprintDay', sprintDay.toString());
         localStorage.setItem('lastSprintUpdate', today);
         updateDashboard();
         
         // Notificação diária
-        showNotification('📊 Seu Dashboard', `Dia ${sprintDay}/60 do sprint!`);
+        showToast(`📊 Dia ${sprintDay}/60 do sprint!`, 'info');
     }
 }
 
-// Executar ao carregar
+// ===== INICIALIZAR SPRINT AO CARREGAR =====
 incrementSprintDay();
-// Sistema de Abas
-const tabs = document.querySelectorAll('.tab');
-const tabContents = document.querySelectorAll('.tab-content');
 
-tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        // Remove classe active de todas as abas
-        tabs.forEach(t => t.classList.remove('active'));
-        tabContents.forEach(content => content.classList.remove('active'));
+// ===== UTILITÁRIOS =====
+function exportData() {
+    const data = {
+        tasks,
+        transactions,
+        habits,
+        totalXP,
+        currentGoal,
+        sprintDay,
+        exportDate: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `dashboard-backup-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+}
+
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
         
-        // Adiciona classe active na aba clicada
-        tab.classList.add('active');
+        reader.onload = function() {
+            try {
+                const data = JSON.parse(reader.result);
+                
+                // Validar dados
+                if (data.tasks && data.transactions && data.habits) {
+                    if (confirm('Importar dados? Isso substituirá seus dados atuais.')) {
+                        tasks = data.tasks || [];
+                        transactions = data.transactions || [];
+                        habits = data.habits || [];
+                        totalXP = data.totalXP || 0;
+                        currentGoal = data.currentGoal || '';
+                        sprintDay = data.sprintDay || 1;
+                        
+                        // Salvar tudo
+                        saveTasks();
+                        saveTransactions();
+                        saveHabits();
+                        localStorage.setItem('totalXP', totalXP.toString());
+                        localStorage.setItem('currentGoal', currentGoal);
+                        localStorage.setItem('sprintDay', sprintDay.toString());
+                        
+                        // Recarregar tudo
+                        updateDashboard();
+                        loadTasks();
+                        loadTransactions();
+                        loadHabits();
+                        
+                        showToast('Dados importados com sucesso!', 'success');
+                    }
+                } else {
+                    showToast('Arquivo inválido!', 'error');
+                }
+            } catch (err) {
+                showToast('Erro ao importar dados!', 'error');
+            }
+        };
         
-        // Mostra o conteúdo correspondente
-        const tabId = tab.getAttribute('data-tab') + '-tab';
-        document.getElementById(tabId).classList.add('active');
-    });
-});
+        reader.readAsText(file);
+    };
+    
+    input.click();
+}
