@@ -1,0 +1,345 @@
+<div class="main-content">
+    <!-- Cabeçalho -->
+    <div class="header">
+        <div class="header-left">
+            <h1 class="page-title">Dashboard</h1>
+            <div class="current-date" id="currentDate"></div>
+        </div>
+        <div class="header-right">
+            <button class="atlas-btn" id="atlasBtn">
+                <i class="fas fa-robot"></i>
+                FALAR COM O ATLAS
+            </button>
+            <div class="notification-bell">
+                <i class="fas fa-bell"></i>
+                <span class="notification-count">3</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas Rápidas -->
+    <div class="quick-stats">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="completedTasks">0/0</div>
+                <div class="stat-label">Tarefas Hoje</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="habitsToday">0</div>
+                <div class="stat-label">Hábitos Concluídos</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="monthlyBudget">R$ 0</div>
+                <div class="stat-label">Orçamento Mensal</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value" id="xpTotal">0</div>
+                <div class="stat-label">XP Total</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid Principal -->
+    <div class="dashboard-grid">
+        <!-- Card Financeiro -->
+        <div class="card card-large">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-line"></i>
+                    FINANCEIRO
+                </h3>
+                <div class="card-actions">
+                    <button class="btn btn-icon" id="addTransactionBtn" title="Nova Transação">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="btn btn-icon" id="viewReportsBtn" title="Relatórios">
+                        <i class="fas fa-chart-bar"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card-content">
+                <div class="finance-period">
+                    <span class="period-label">DÉCEMBRO 2025</span>
+                    <div class="period-nav">
+                        <button class="btn-period prev"><i class="fas fa-chevron-left"></i></button>
+                        <button class="btn-period next"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                
+                <div class="budget-overview">
+                    <div class="budget-summary">
+                        <div class="budget-item">
+                            <div class="budget-label">ENTRADAS</div>
+                            <div class="budget-value income">R$ 10.000</div>
+                        </div>
+                        <div class="budget-item">
+                            <div class="budget-label">SAÍDAS</div>
+                            <div class="budget-value expense">R$ 2.637</div>
+                        </div>
+                    </div>
+                    
+                    <div class="budget-progress">
+                        <div class="progress-header">
+                            <span>Orçamento Mensal - Metade</span>
+                            <span class="budget-generated positive">R$ 2.637,00 gerados</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 74%"></div>
+                        </div>
+                        <div class="progress-footer">
+                            <span>SALDO</span>
+                            <span class="saldo-value">R$ 7.363</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="categories-section">
+                    <h4 class="section-subtitle">ORÇAMENTO POR CATEGORIA</h4>
+                    <div class="categories-list" id="categoriesList">
+                        <!-- Categorias serão carregadas dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Resumo do Dia -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-sun"></i>
+                    RESUMO DO DIA
+                </h3>
+                <span class="card-subtitle">segunda-feira, 19 de janeiro de 2026</span>
+            </div>
+            
+            <div class="card-content">
+                <div class="daily-progress">
+                    <div class="progress-circle" id="dailyProgressCircle">
+                        <svg width="80" height="80" viewBox="0 0 80 80">
+                            <circle class="progress-bg" cx="40" cy="40" r="35"></circle>
+                            <circle class="progress-bar" cx="40" cy="40" r="35" stroke-dasharray="220" stroke-dashoffset="66"></circle>
+                            <text x="40" y="45" text-anchor="middle" class="progress-text">90%</text>
+                        </svg>
+                    </div>
+                    <div class="progress-details">
+                        <div class="progress-item">
+                            <span class="progress-label">Tarefas</span>
+                            <span class="progress-value">9/10</span>
+                        </div>
+                        <div class="progress-item">
+                            <span class="progress-label">Hábitos</span>
+                            <span class="progress-value">3/6</span>
+                        </div>
+                        <div class="progress-item">
+                            <span class="progress-label">Metas</span>
+                            <span class="progress-value">2/4</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="today-tasks">
+                    <h4 class="section-subtitle">TAREFAS DE HOJE</h4>
+                    <div class="tasks-list" id="todayTasksList">
+                        <!-- Tarefas serão carregadas dinamicamente -->
+                    </div>
+                </div>
+                
+                <button class="btn btn-outline btn-block" id="addTaskBtn">
+                    <i class="fas fa-plus"></i>
+                    Adicionar Tarefa
+                </button>
+            </div>
+        </div>
+
+        <!-- Card Rotina -->
+        <div class="card card-large">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    ROTINA SEMANAL
+                </h3>
+                <div class="card-actions">
+                    <button class="btn btn-icon" id="newHabitBtn" title="Novo Hábito">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="btn btn-icon" id="calendarViewBtn" title="Visualizar Calendário">
+                        <i class="fas fa-calendar-week"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card-content">
+                <div class="calendar-week">
+                    <div class="calendar-header">
+                        <div>DOM</div>
+                        <div>SEG</div>
+                        <div>TER</div>
+                        <div>QUA</div>
+                        <div>QUI</div>
+                        <div>SEX</div>
+                        <div>SÁB</div>
+                    </div>
+                    <div class="calendar-days">
+                        <div class="day">14</div>
+                        <div class="day">15</div>
+                        <div class="day">16</div>
+                        <div class="day">17</div>
+                        <div class="day">18</div>
+                        <div class="day">19</div>
+                        <div class="day today">20</div>
+                    </div>
+                </div>
+                
+                <div class="habits-tracker">
+                    <div class="habits-list" id="habitsList">
+                        <!-- Hábitos serão carregados dinamicamente -->
+                    </div>
+                </div>
+                
+                <div class="habits-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Consistência Semanal</span>
+                        <span class="summary-value">65%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Sequência Atual</span>
+                        <span class="summary-value">8 dias</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Progresso Atlas -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-robot"></i>
+                    DASHBOARD ATLAS
+                </h3>
+                <span class="card-subtitle">Progresso em tempo real</span>
+            </div>
+            
+            <div class="card-content">
+                <div class="rank-display">
+                    <div class="rank-badge">
+                        <div class="rank-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="rank-info">
+                            <div class="rank-title">SARGENTO</div>
+                            <div class="rank-next">Próximo: TENENTE</div>
+                        </div>
+                    </div>
+                    
+                    <div class="rank-progress">
+                        <div class="progress-info">
+                            <span>Progresso</span>
+                            <span>49%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 49%"></div>
+                        </div>
+                        <div class="progress-goal">
+                            <span>2.450 XP</span>
+                            <span>5.000 XP</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="atlas-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">87%</div>
+                        <div class="stat-label">Taxa de Conclusão</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">24</div>
+                        <div class="stat-label">Dias na Sequência</div>
+                    </div>
+                </div>
+                
+                <div class="weekly-chart">
+                    <h4 class="section-subtitle">Progresso Semanal</h4>
+                    <div class="chart-bars" id="weeklyProgressChart">
+                        <!-- Gráfico será renderizado pelo JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção Metas em Destaque -->
+    <div class="goals-section">
+        <h2 class="section-title">Metas em Destaque</h2>
+        <div class="goals-grid">
+            <div class="goal-card">
+                <div class="goal-icon">
+                    <i class="fas fa-dumbbell"></i>
+                </div>
+                <div class="goal-content">
+                    <h4 class="goal-title">Treino Físico</h4>
+                    <p class="goal-description">30 dias consecutivos de treino</p>
+                    <div class="goal-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 70%"></div>
+                        </div>
+                        <span class="goal-percentage">70%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="goal-card">
+                <div class="goal-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div class="goal-content">
+                    <h4 class="goal-title">Leitura</h4>
+                    <p class="goal-description">Ler 12 livros este ano</p>
+                    <div class="goal-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 25%"></div>
+                        </div>
+                        <span class="goal-percentage">25%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="goal-card">
+                <div class="goal-icon">
+                    <i class="fas fa-piggy-bank"></i>
+                </div>
+                <div class="goal-content">
+                    <h4 class="goal-title">Economia</h4>
+                    <p class="goal-description">Economizar R$ 10.000 este ano</p>
+                    <div class="goal-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 45%"></div>
+                        </div>
+                        <span class="goal-percentage">45%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
