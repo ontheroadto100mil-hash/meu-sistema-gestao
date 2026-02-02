@@ -1,23 +1,18 @@
 {
-  "name": "Meu Sistema de Gestão",
+  "name": "Dashboard Completo",
   "short_name": "Dashboard",
-  "description": "Dashboard pessoal de produtividade e metas",
-  "start_url": "./",
+  "description": "Dashboard pessoal para finanças, rotina, metas e trilhas",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0f23",
-  "theme_color": "#00ff00",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://img.icons8.com/color/72/000000/dashboard.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
       "src": "https://img.icons8.com/color/96/000000/dashboard.png",
       "sizes": "96x96",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "https://img.icons8.com/color/144/000000/dashboard.png",
@@ -33,6 +28,21 @@
       "src": "https://img.icons8.com/color/512/000000/dashboard.png",
       "sizes": "512x512",
       "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "finance", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Finanças",
+      "short_name": "Finanças",
+      "description": "Acessar módulo financeiro",
+      "url": "/#finances"
+    },
+    {
+      "name": "Rotina",
+      "short_name": "Rotina",
+      "description": "Acessar hábitos diários",
+      "url": "/#routine"
     }
   ]
 }
