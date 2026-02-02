@@ -1,57 +1,35 @@
-// ===== DADOS GLOBAIS =====
+// ===== DADOS GLOBAIS (INICIALMENTE VAZIOS) =====
 let finances = {
-    income: 100000,
-    expenses: 1998.43,
-    savings: 38338,
-    balance: 136339.57,
-    savingsRate: 98.0,
+    income: 0,
+    expenses: 0,
+    savings: 0,
+    balance: 0,
+    savingsRate: 0,
     budget: {
-        total: 5000,
-        spent: 1998.43,
-        remaining: 3001.57
+        total: 0,
+        spent: 0,
+        remaining: 0
     },
-    categories: [
-        { name: "Marília", value: 800, color: "#4f46e5" },
-        { name: "Alimentação", value: 450, color: "#10b981" },
-        { name: "Transporte", value: 300, color: "#f59e0b" },
-        { name: "Lazer", value: 200, color: "#ef4444" }
-    ],
+    categories: [],
     transactions: []
 };
 
 let routine = {
-    mostDone: { name: "Devocional", count: 20 },
-    month: { name: "Janeiro", activeDays: 10 },
-    today: {
-        date: "Sábado, 24 de Janeiro",
-        completed: 1,
-        total: 7,
-        percentage: 14
+    mostDone: { name: "Nenhum", count: 0 },
+    month: { 
+        name: new Date().toLocaleString('pt-BR', { month: 'long' }).toUpperCase(),
+        activeDays: 0 
     },
-    habits: [
-        { id: 1, name: "Beber 4L de água", points: 45, completed: false, streak: 5 },
-        { id: 2, name: "Devocional", points: 25, completed: true, streak: 20 },
-        { id: 3, name: "Dieta", points: 45, completed: false, streak: 3 },
-        { id: 4, name: "Ler 20 páginas por dia", points: 25, completed: false, streak: 8 },
-        { id: 5, name: "Ler 3 capítulos da bíblia", points: 25, completed: false, streak: 15 },
-        { id: 6, name: "Organizar quarto", points: 30, completed: false, streak: 2 },
-        { id: 7, name: "Treino Jiu jitsu", points: 55, completed: false, streak: 10 }
-    ]
+    today: {
+        date: "",
+        completed: 0,
+        total: 0,
+        percentage: 0
+    },
+    habits: []
 };
 
-let trails = [
-    {
-        id: 1,
-        name: "FRANCÊS 90 DIAS",
-        type: "Trilha A",
-        totalDays: 90,
-        completedDays: 40,
-        currentStreak: 12,
-        level: "Intermediário",
-        progress: 45
-    }
-];
-
+let trails = [];
 let goals = [];
 
 // ===== INICIALIZAÇÃO =====
@@ -77,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Mostrar notificação de boas-vindas
     setTimeout(() => {
-        showToast("📱 Dashboard carregado com sucesso!");
+        showToast("📱 Dashboard iniciado! Comece a adicionar seus dados.");
     }, 1000);
 });
 
@@ -137,35 +115,50 @@ function loadFinances() {
     document.querySelector('.total-balance h2').textContent = 
         formatCurrency(finances.balance);
     document.querySelector('.savings-header h3').textContent = 
-        `+${finances.savingsRate.toFixed(1)}%`;
+        finances.income > 0 ? `+${finances.savingsRate.toFixed(1)}%` : '0%';
     
     // Atualizar orçamento
-    const budgetSpent = document.querySelector('.budget-card p');
+    const budgetCard = document.querySelector('.budget-card');
     const budgetRemaining = document.querySelector('.remaining');
     const budgetProgress = document.querySelector('.budget-progress');
     
-    budgetSpent.textContent = 
-        `${formatCurrency(finances.budget.spent)} gastos de ${formatCurrency(finances.budget.total)}`;
-    budgetRemaining.textContent = 
-        `Restante: ${formatCurrency(finances.budget.remaining)}`;
-    
-    const progressPercentage = (finances.budget.spent / finances.budget.total) * 100;
-    budgetProgress.style.width = `${progressPercentage}%`;
+    if (finances.budget.total > 0) {
+        budgetCard.querySelector('p').textContent = 
+            `${formatCurrency(finances.budget.spent)} gastos de ${formatCurrency(finances.budget.total)}`;
+        budgetRemaining.textContent = 
+            `Restante: ${formatCurrency(finances.budget.remaining)}`;
+        
+        const progressPercentage = (finances.budget.spent / finances.budget.total) * 100;
+        budgetProgress.style.width = `${progressPercentage}%`;
+    } else {
+        budgetCard.querySelector('p').textContent = 'Nenhum orçamento definido';
+        budgetRemaining.textContent = 'Defina um orçamento primeiro';
+        budgetProgress.style.width = '0%';
+    }
     
     // Atualizar categorias
     const categoriesList = document.querySelector('.categories-list');
     categoriesList.innerHTML = '';
     
-    finances.categories.forEach(category => {
-        const categoryItem = document.createElement('div');
-        categoryItem.className = 'category-item';
-        categoryItem.innerHTML = `
-            <div class="category-color" style="background-color: ${category.color};"></div>
-            <span>${category.name}</span>
-            <span class="category-value">${formatCurrency(category.value)}</span>
+    if (finances.categories.length === 0) {
+        categoriesList.innerHTML = `
+            <div class="empty-message">
+                <p>📭 Nenhuma categoria de gastos</p>
+                <small>Adicione transações para ver categorias</small>
+            </div>
         `;
-        categoriesList.appendChild(categoryItem);
-    });
+    } else {
+        finances.categories.forEach(category => {
+            const categoryItem = document.createElement('div');
+            categoryItem.className = 'category-item';
+            categoryItem.innerHTML = `
+                <div class="category-color" style="background-color: ${category.color};"></div>
+                <span>${category.name}</span>
+                <span class="category-value">${formatCurrency(category.value)}</span>
+            `;
+            categoriesList.appendChild(categoryItem);
+        });
+    }
     
     // Carregar transações
     loadTransactions();
@@ -174,21 +167,24 @@ function loadFinances() {
 function loadTransactions() {
     const transactionList = document.getElementById('transactionList');
     
-    // Gerar transações de exemplo se não houver
-    if (finances.transactions.length === 0) {
-        finances.transactions = [
-            { id: 1, type: 'income', description: 'Salário', amount: 3500, date: '2026-01-24', category: 'salary' },
-            { id: 2, type: 'expense', description: 'Supermercado', amount: 450, date: '2026-01-23', category: 'food' },
-            { id: 3, type: 'expense', description: 'Transporte', amount: 120, date: '2026-01-22', category: 'transport' },
-            { id: 4, type: 'expense', description: 'Academia', amount: 89.90, date: '2026-01-21', category: 'health' },
-            { id: 5, type: 'income', description: 'Freelance', amount: 800, date: '2026-01-20', category: 'other' }
-        ];
-        saveData('finances', finances);
-    }
-    
     transactionList.innerHTML = '';
     
-    finances.transactions.slice(0, 5).forEach(transaction => {
+    if (finances.transactions.length === 0) {
+        transactionList.innerHTML = `
+            <div class="empty-message">
+                <p>📭 Nenhuma transação registrada</p>
+                <small>Adicione sua primeira transação!</small>
+            </div>
+        `;
+        return;
+    }
+    
+    // Mostrar as 5 transações mais recentes
+    const recentTransactions = [...finances.transactions]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5);
+    
+    recentTransactions.forEach(transaction => {
         const transactionItem = document.createElement('div');
         transactionItem.className = 'transaction-item';
         transactionItem.innerHTML = `
@@ -264,17 +260,28 @@ function saveTransaction() {
         finances.budget.remaining = finances.budget.total - finances.budget.spent;
         finances.balance -= amount;
         
-        // Adicionar à categoria correspondente
+        // Adicionar/atualizar categoria
+        const categoryName = getCategoryName(category);
         const categoryIndex = finances.categories.findIndex(c => 
-            c.name.toLowerCase() === getCategoryName(category).toLowerCase());
+            c.name.toLowerCase() === categoryName.toLowerCase());
         
         if (categoryIndex !== -1) {
             finances.categories[categoryIndex].value += amount;
+        } else {
+            const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+            const color = colors[finances.categories.length % colors.length];
+            finances.categories.push({
+                name: categoryName,
+                value: amount,
+                color: color
+            });
         }
     }
     
-    // Recalcular taxa de economia
-    finances.savingsRate = ((finances.savings / finances.income) * 100).toFixed(1);
+    // Recalcular taxa de economia se houver renda
+    if (finances.income > 0) {
+        finances.savingsRate = ((finances.savings / finances.income) * 100).toFixed(1);
+    }
     
     // Salvar e atualizar
     saveData('finances', finances);
@@ -303,7 +310,7 @@ function loadRoutine() {
     document.querySelector('.routine-stats .stat-card:first-child h3').textContent = 
         routine.mostDone.name;
     document.querySelector('.routine-stats .stat-card:first-child p').textContent = 
-        `${routine.mostDone.count}x`;
+        routine.mostDone.count > 0 ? `${routine.mostDone.count}x` : '0x';
     
     document.querySelector('.routine-stats .stat-card:last-child h3').textContent = 
         routine.month.name;
@@ -327,6 +334,16 @@ function loadRoutine() {
 function loadHabits() {
     const habitsList = document.getElementById('habitsList');
     habitsList.innerHTML = '';
+    
+    if (routine.habits.length === 0) {
+        habitsList.innerHTML = `
+            <div class="empty-message">
+                <p>📭 Nenhum hábito cadastrado</p>
+                <small>Adicione seu primeiro hábito!</small>
+            </div>
+        `;
+        return;
+    }
     
     // Ordenar hábitos: completados primeiro
     const sortedHabits = [...routine.habits].sort((a, b) => 
@@ -370,14 +387,15 @@ function toggleHabit(habitId) {
             routine.mostDone = { name: habit.name, count: habit.streak };
         }
         
-        showToast(`✅ ${habit.name} completado! +${habit.points} pontos`);
+        showToast(`✅ ${habit.name} completado!`);
     } else {
         routine.today.completed--;
         habit.streak = Math.max(0, habit.streak - 1);
     }
     
     // Recalcular porcentagem
-    routine.today.percentage = Math.round((routine.today.completed / routine.today.total) * 100);
+    routine.today.percentage = routine.today.total > 0 ? 
+        Math.round((routine.today.completed / routine.today.total) * 100) : 0;
     
     // Salvar e atualizar
     saveData('routine', routine);
@@ -407,6 +425,7 @@ function addNewHabit() {
     
     routine.habits.push(newHabit);
     routine.today.total++;
+    routine.today.percentage = Math.round((routine.today.completed / routine.today.total) * 100);
     
     // Limpar inputs
     nameInput.value = '';
@@ -445,17 +464,28 @@ function updateWeekChart() {
     const weekBars = document.querySelectorAll('.day-bar');
     const todayIndex = new Date().getDay(); // 0 = Domingo, 6 = Sábado
     
+    // Valores iniciais (todos zero)
+    const values = [0, 0, 0, 0, 0, 0, 0];
+    
+    // Se houver hábitos completados hoje, atualiza valor
+    if (routine.today.completed > 0) {
+        const dayIndex = todayIndex === 0 ? 6 : todayIndex - 1; // Ajuste para Seg-Sáb
+        if (dayIndex >= 0 && dayIndex < values.length) {
+            values[dayIndex] = routine.today.percentage;
+        }
+    }
+    
     weekBars.forEach((bar, index) => {
         // Remover classe active de todas
         bar.classList.remove('active');
         
-        // Definir valores (simulação)
-        const values = [80, 60, 90, 40, 70, 14, 0];
+        // Definir valores
         bar.setAttribute('data-value', values[index]);
         bar.style.setProperty('--value', values[index]);
         
         // Marcar hoje como ativo
-        if (index === todayIndex - 1) { // Ajuste para nossa ordem (Seg-Sáb)
+        const dayIndex = todayIndex === 0 ? 6 : todayIndex - 1;
+        if (index === dayIndex) {
             bar.classList.add('active');
         }
     });
@@ -464,18 +494,38 @@ function updateWeekChart() {
 // ===== MÓDULO: ATLAS/TRILHAS =====
 function loadTrails() {
     const timeline = document.querySelector('.trail-timeline');
+    const trailHeader = document.querySelector('.trail-header h3');
+    const progressValue = document.querySelector('.progress-value');
+    
     if (!timeline) return;
     
     timeline.innerHTML = '';
     
+    // SE NÃO HÁ TRILHAS
+    if (trails.length === 0) {
+        trailHeader.textContent = 'TRILHA A - NENHUMA TRILHA';
+        progressValue.textContent = '0%';
+        
+        timeline.innerHTML = `
+            <div class="empty-trail-message">
+                <p>📭 Nenhuma trilha criada</p>
+                <small>Crie sua primeira trilha abaixo!</small>
+            </div>
+        `;
+        
+        // Limpar estatísticas
+        document.querySelectorAll('.trail-stat')[0].querySelector('strong').textContent = '0/0';
+        document.querySelectorAll('.trail-stat')[1].querySelector('strong').textContent = '0 dias';
+        document.querySelectorAll('.trail-stat')[2].querySelector('strong').textContent = 'Iniciante';
+        
+        return;
+    }
+    
     const trail = trails[0];
-    if (!trail) return;
     
     // Atualizar cabeçalho da trilha
-    document.querySelector('.trail-header h3').textContent = 
-        `TRILHA A - ${trail.name}`;
-    document.querySelector('.progress-value').textContent = 
-        `${trail.progress}%`;
+    trailHeader.textContent = `${trail.type} - ${trail.name}`;
+    progressValue.textContent = `${trail.progress}%`;
     
     // Atualizar estatísticas
     document.querySelectorAll('.trail-stat')[0].querySelector('strong').textContent = 
@@ -508,8 +558,12 @@ function loadTrails() {
 }
 
 function toggleTrailDay(day) {
+    if (trails.length === 0) {
+        showToast("⚠️ Crie uma trilha primeiro!");
+        return;
+    }
+    
     const trail = trails[0];
-    if (!trail) return;
     
     if (day <= trail.completedDays) {
         // Desmarcar dia
@@ -601,44 +655,17 @@ function loadGoals() {
     const goalsGrid = document.querySelector('.goals-grid');
     if (!goalsGrid) return;
     
-    // Carregar metas salvas
-    if (goals.length === 0) {
-        goals = [
-            {
-                id: 1,
-                title: "Economizar R$ 10.000",
-                description: "Reserva de emergência completa",
-                category: "finance",
-                deadline: "2026-06-30",
-                value: 10000,
-                progress: 65,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 2,
-                title: "Ler 12 livros",
-                description: "Um livro por mês",
-                category: "learning",
-                deadline: "2026-12-31",
-                value: 12,
-                progress: 25,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: 3,
-                title: "Perder 5kg",
-                description: "Alcançar peso ideal",
-                category: "health",
-                deadline: "2026-03-31",
-                value: 5,
-                progress: 40,
-                createdAt: new Date().toISOString()
-            }
-        ];
-        saveData('goals', goals);
-    }
-    
     goalsGrid.innerHTML = '';
+    
+    if (goals.length === 0) {
+        goalsGrid.innerHTML = `
+            <div class="empty-goals-message">
+                <p>🎯 Nenhuma meta definida</p>
+                <small>Crie sua primeira meta abaixo!</small>
+            </div>
+        `;
+        return;
+    }
     
     goals.forEach(goal => {
         const goalCard = document.createElement('div');
@@ -662,7 +689,7 @@ function loadGoals() {
                 </div>
                 <div class="goal-progress-text">
                     <span>${goal.progress}%</span>
-                    <span>${formatCurrency(goal.value)}</span>
+                    <span>${goal.value > 0 ? formatCurrency(goal.value) : ''}</span>
                 </div>
             </div>
             <div class="goal-deadline">
@@ -759,6 +786,14 @@ function loadMenuStats() {
 }
 
 function exportAllData() {
+    if (finances.transactions.length === 0 && 
+        routine.habits.length === 0 && 
+        goals.length === 0 && 
+        trails.length === 0) {
+        showToast("📭 Nenhum dado para exportar!");
+        return;
+    }
+    
     const allData = {
         finances: finances,
         routine: routine,
@@ -828,6 +863,14 @@ function importData() {
 }
 
 function clearAllData() {
+    if (finances.transactions.length === 0 && 
+        routine.habits.length === 0 && 
+        goals.length === 0 && 
+        trails.length === 0) {
+        showToast("📭 Já está tudo vazio!");
+        return;
+    }
+    
     if (!confirm("⚠️ TEM CERTEZA? Isso apagará TODOS os seus dados permanentemente!")) {
         return;
     }
@@ -846,7 +889,10 @@ function clearAllData() {
     
     routine = {
         mostDone: { name: "Nenhum", count: 0 },
-        month: { name: new Date().toLocaleString('pt-BR', { month: 'long' }), activeDays: 0 },
+        month: { 
+            name: new Date().toLocaleString('pt-BR', { month: 'long' }).toUpperCase(),
+            activeDays: 0 
+        },
         today: { date: "", completed: 0, total: 0, percentage: 0 },
         habits: []
     };
@@ -883,7 +929,7 @@ function showConfig() {
 }
 
 function showAbout() {
-    showToast("📱 Dashboard v1.0 • Desenvolvido com ❤️");
+    showToast("📱 Dashboard v1.0 • Comece do zero • Desenvolvido com ❤️");
 }
 
 // ===== SISTEMA DE PERSISTÊNCIA =====
@@ -935,12 +981,16 @@ function formatCurrency(value) {
 }
 
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    } catch (err) {
+        return dateString;
+    }
 }
 
 function showToast(message, type = 'info') {
