@@ -1,355 +1,996 @@
-// Sistema de Gamificação
-const RANKS = {
-    0: 'RECRUTA',
-    100: 'SOLDADO',
-    500: 'CABO',
-    1000: 'SARGENTO',
-    2500: 'TENENTE',
-    5000: 'CAPITÃO'
+// ===== DADOS GLOBAIS =====
+let finances = {
+    income: 100000,
+    expenses: 1998.43,
+    savings: 38338,
+    balance: 136339.57,
+    savingsRate: 98.0,
+    budget: {
+        total: 5000,
+        spent: 1998.43,
+        remaining: 3001.57
+    },
+    categories: [
+        { name: "Marília", value: 800, color: "#4f46e5" },
+        { name: "Alimentação", value: 450, color: "#10b981" },
+        { name: "Transporte", value: 300, color: "#f59e0b" },
+        { name: "Lazer", value: 200, color: "#ef4444" }
+    ],
+    transactions: []
 };
 
-let totalXP = parseInt(localStorage.getItem('totalXP')) || 0;
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-let habits = JSON.parse(localStorage.getItem('habits')) || [];
-let currentGoal = localStorage.getItem('currentGoal') || '';
-let sprintDay = parseInt(localStorage.getItem('sprintDay')) || 1;
+let routine = {
+    mostDone: { name: "Devocional", count: 20 },
+    month: { name: "Janeiro", activeDays: 10 },
+    today: {
+        date: "Sábado, 24 de Janeiro",
+        completed: 1,
+        total: 7,
+        percentage: 14
+    },
+    habits: [
+        { id: 1, name: "Beber 4L de água", points: 45, completed: false, streak: 5 },
+        { id: 2, name: "Devocional", points: 25, completed: true, streak: 20 },
+        { id: 3, name: "Dieta", points: 45, completed: false, streak: 3 },
+        { id: 4, name: "Ler 20 páginas por dia", points: 25, completed: false, streak: 8 },
+        { id: 5, name: "Ler 3 capítulos da bíblia", points: 25, completed: false, streak: 15 },
+        { id: 6, name: "Organizar quarto", points: 30, completed: false, streak: 2 },
+        { id: 7, name: "Treino Jiu jitsu", points: 55, completed: false, streak: 10 }
+    ]
+};
 
-// Inicialização
-document.addEventListener('DOMContentLoaded', function() {
-    updateDashboard();
-    loadTasks();
-    loadTransactions();
-    loadHabits();
-    setupTabs();
-    
-    // Configurar PWA
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js');
+let trails = [
+    {
+        id: 1,
+        name: "FRANCÊS 90 DIAS",
+        type: "Trilha A",
+        totalDays: 90,
+        completedDays: 40,
+        currentStreak: 12,
+        level: "Intermediário",
+        progress: 45
     }
+];
+
+let goals = [];
+
+// ===== INICIALIZAÇÃO =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Carregar dados do localStorage
+    loadAllData();
+    
+    // Inicializar data
+    updateDates();
+    
+    // Inicializar abas
+    initializeTabs();
+    
+    // Carregar todos os módulos
+    loadFinances();
+    loadRoutine();
+    loadTrails();
+    loadGoals();
+    loadMenuStats();
+    
+    // Configurar eventos
+    setupEventListeners();
+    
+    // Mostrar notificação de boas-vindas
+    setTimeout(() => {
+        showToast("📱 Dashboard carregado com sucesso!");
+    }, 1000);
 });
 
-// Sistema de Abas
-function setupTabs() {
+// ===== SISTEMA DE ABAS =====
+function initializeTabs() {
     const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            const tabName = tab.getAttribute('data-tab');
-            showTab(tabName);
+            const tabId = tab.getAttribute('data-tab');
+            
+            // Remover classe active de todas as abas
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Adicionar classe active na aba clicada
+            tab.classList.add('active');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            
+            // Salvar aba ativa
+            localStorage.setItem('activeTab', tabId);
         });
     });
+    
+    // Restaurar aba ativa
+    const activeTab = localStorage.getItem('activeTab') || 'finances';
+    document.querySelector(`[data-tab="${activeTab}"]`).classList.add('active');
+    document.getElementById(`${activeTab}-tab`).classList.add('active');
 }
 
-function showTab(tabName) {
-    // Remover classe active de todas as abas
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+// ===== SISTEMA DE DATAS =====
+function updateDates() {
+    const now = new Date();
+    const months = ["JANEIRO", "FEVEREIRO", "MARÇO", "ABRIL", "MAIO", "JUNHO", 
+                   "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"];
+    const days = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
     
-    // Ativar aba clicada
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    document.getElementById(`${tabName}-tab`).classList.add('active');
+    // Atualizar data no cabeçalho
+    document.getElementById('currentDate').textContent = 
+        `${months[now.getMonth()]} ${now.getFullYear()}`;
+    document.getElementById('currentDay').textContent = 
+        `${days[now.getDay()]}, ${now.getDate()} de ${months[now.getMonth()].toLowerCase()}`;
+    
+    // Atualizar data na rotina
+    routine.today.date = `${days[now.getDay()]}, ${now.getDate()} de ${months[now.getMonth()].toLowerCase()}`;
+    document.getElementById('todayDate').textContent = `HOJE - ${routine.today.date}`;
 }
 
-// Sistema de Tarefas
-function addTask() {
-    const input = document.getElementById('newTask');
-    const text = input.value.trim();
+// ===== MÓDULO: FINANÇAS =====
+function loadFinances() {
+    // Atualizar valores financeiros
+    document.querySelector('.summary-card.income h3').textContent = 
+        formatCurrency(finances.income);
+    document.querySelector('.summary-card.expense h3').textContent = 
+        formatCurrency(finances.expenses);
+    document.querySelector('.total-balance h2').textContent = 
+        formatCurrency(finances.balance);
+    document.querySelector('.savings-header h3').textContent = 
+        `+${finances.savingsRate.toFixed(1)}%`;
     
-    if (text) {
-        const task = {
-            id: Date.now(),
-            text: text,
-            completed: false,
-            createdAt: new Date().toISOString(),
-            xpValue: 10
-        };
-        
-        tasks.push(task);
-        saveTasks();
-        input.value = '';
-        loadTasks();
-    }
-}
-
-function toggleTask(id) {
-    const task = tasks.find(t => t.id === id);
-    if (task) {
-        task.completed = !task.completed;
-        
-        // Adicionar XP se completou
-        if (task.completed) {
-            addXP(task.xpValue);
-        } else {
-            addXP(-task.xpValue);
-        }
-        
-        saveTasks();
-        loadTasks();
-        updateDashboard();
-    }
-}
-
-function loadTasks() {
-    const taskList = document.getElementById('taskList');
-    const completedTasks = tasks.filter(t => t.completed).length;
-    const totalTasks = tasks.length;
+    // Atualizar orçamento
+    const budgetSpent = document.querySelector('.budget-card p');
+    const budgetRemaining = document.querySelector('.remaining');
+    const budgetProgress = document.querySelector('.budget-progress');
     
-    taskList.innerHTML = '';
+    budgetSpent.textContent = 
+        `${formatCurrency(finances.budget.spent)} gastos de ${formatCurrency(finances.budget.total)}`;
+    budgetRemaining.textContent = 
+        `Restante: ${formatCurrency(finances.budget.remaining)}`;
     
-    tasks.forEach(task => {
-        const li = document.createElement('li');
-        li.className = 'task-item';
-        li.innerHTML = `
-            <input type="checkbox" class="task-checkbox" 
-                   ${task.completed ? 'checked' : ''} 
-                   onchange="toggleTask(${task.id})">
-            <span class="task-text ${task.completed ? 'task-completed' : ''}">
-                ${task.text}
-            </span>
+    const progressPercentage = (finances.budget.spent / finances.budget.total) * 100;
+    budgetProgress.style.width = `${progressPercentage}%`;
+    
+    // Atualizar categorias
+    const categoriesList = document.querySelector('.categories-list');
+    categoriesList.innerHTML = '';
+    
+    finances.categories.forEach(category => {
+        const categoryItem = document.createElement('div');
+        categoryItem.className = 'category-item';
+        categoryItem.innerHTML = `
+            <div class="category-color" style="background-color: ${category.color};"></div>
+            <span>${category.name}</span>
+            <span class="category-value">${formatCurrency(category.value)}</span>
         `;
-        taskList.appendChild(li);
+        categoriesList.appendChild(categoryItem);
     });
     
-    // Atualizar progresso
-    const progress = totalTasks ? (completedTasks / totalTasks) * 100 : 0;
-    document.getElementById('taskProgress').style.width = `${progress}%`;
-    document.getElementById('taskCount').textContent = `${completedTasks}/${totalTasks} concluídas`;
-}
-
-function saveTasks() {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-}
-
-// Sistema Financeiro
-function addTransaction() {
-    const type = document.getElementById('transactionType').value;
-    const desc = document.getElementById('transactionDesc').value.trim();
-    const amount = parseFloat(document.getElementById('transactionAmount').value);
-    
-    if (!desc || isNaN(amount) || amount <= 0) {
-        alert('Preencha todos os campos corretamente!');
-        return;
-    }
-    
-    const transaction = {
-        id: Date.now(),
-        type: type,
-        description: desc,
-        amount: amount,
-        date: new Date().toISOString()
-    };
-    
-    transactions.push(transaction);
-    saveTransactions();
+    // Carregar transações
     loadTransactions();
-    
-    // Limpar campos
-    document.getElementById('transactionDesc').value = '';
-    document.getElementById('transactionAmount').value = '';
-    
-    // Adicionar XP por controle financeiro
-    addXP(5);
 }
 
 function loadTransactions() {
     const transactionList = document.getElementById('transactionList');
-    let balance = 0;
+    
+    // Gerar transações de exemplo se não houver
+    if (finances.transactions.length === 0) {
+        finances.transactions = [
+            { id: 1, type: 'income', description: 'Salário', amount: 3500, date: '2026-01-24', category: 'salary' },
+            { id: 2, type: 'expense', description: 'Supermercado', amount: 450, date: '2026-01-23', category: 'food' },
+            { id: 3, type: 'expense', description: 'Transporte', amount: 120, date: '2026-01-22', category: 'transport' },
+            { id: 4, type: 'expense', description: 'Academia', amount: 89.90, date: '2026-01-21', category: 'health' },
+            { id: 5, type: 'income', description: 'Freelance', amount: 800, date: '2026-01-20', category: 'other' }
+        ];
+        saveData('finances', finances);
+    }
     
     transactionList.innerHTML = '';
     
-    transactions.slice(-10).reverse().forEach(transaction => {
-        const isIncome = transaction.type === 'income';
-        balance += isIncome ? transaction.amount : -transaction.amount;
-        
-        const li = document.createElement('li');
-        li.className = 'transaction-item';
-        li.innerHTML = `
+    finances.transactions.slice(0, 5).forEach(transaction => {
+        const transactionItem = document.createElement('div');
+        transactionItem.className = 'transaction-item';
+        transactionItem.innerHTML = `
             <div class="transaction-info">
                 <span class="transaction-desc">${transaction.description}</span>
-                <span class="transaction-date">${new Date(transaction.date).toLocaleDateString()}</span>
+                <span class="transaction-date">${formatDate(transaction.date)}</span>
             </div>
-            <span class="transaction-amount ${isIncome ? 'income' : 'expense'}">
-                ${isIncome ? '+' : '-'} R$ ${transaction.amount.toFixed(2)}
+            <span class="transaction-amount ${transaction.type}">
+                ${transaction.type === 'income' ? '+' : '-'} ${formatCurrency(transaction.amount)}
             </span>
         `;
-        transactionList.appendChild(li);
+        transactionList.appendChild(transactionItem);
     });
-    
-    // Atualizar saldo
-    document.getElementById('balanceValue').textContent = `R$ ${balance.toFixed(2)}`;
-    document.getElementById('currentBalance').textContent = `R$ ${balance.toFixed(0)}`;
-    
-    saveTransactions();
 }
 
-function saveTransactions() {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
+function showAddTransactionModal() {
+    const modal = document.getElementById('transactionModal');
+    const dateInput = document.getElementById('modalTransactionDate');
+    
+    // Definir data atual como padrão
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+    
+    // Mostrar modal
+    modal.style.display = 'flex';
 }
 
-// Sistema de Hábitos
-function loadHabits() {
-    const habitsGrid = document.getElementById('habitsGrid');
-    habitsGrid.innerHTML = '';
+function closeTransactionModal() {
+    document.getElementById('transactionModal').style.display = 'none';
+    clearTransactionForm();
+}
+
+function clearTransactionForm() {
+    document.getElementById('modalTransactionDesc').value = '';
+    document.getElementById('modalTransactionAmount').value = '';
+    document.getElementById('modalTransactionCategory').value = 'other';
+    document.getElementById('modalTransactionType').value = 'expense';
+}
+
+function saveTransaction() {
+    const type = document.getElementById('modalTransactionType').value;
+    const description = document.getElementById('modalTransactionDesc').value.trim();
+    const amount = parseFloat(document.getElementById('modalTransactionAmount').value);
+    const category = document.getElementById('modalTransactionCategory').value;
+    const date = document.getElementById('modalTransactionDate').value;
     
-    habits.forEach(habit => {
-        const today = new Date().toDateString();
-        const completedToday = habit.completions.includes(today);
+    // Validação
+    if (!description || isNaN(amount) || amount <= 0) {
+        showToast("⚠️ Preencha todos os campos corretamente!", "error");
+        return;
+    }
+    
+    // Criar nova transação
+    const newTransaction = {
+        id: Date.now(),
+        type: type,
+        description: description,
+        amount: amount,
+        category: category,
+        date: date
+    };
+    
+    // Adicionar à lista
+    finances.transactions.unshift(newTransaction);
+    
+    // Atualizar finanças
+    if (type === 'income') {
+        finances.income += amount;
+        finances.balance += amount;
+    } else {
+        finances.expenses += amount;
+        finances.budget.spent += amount;
+        finances.budget.remaining = finances.budget.total - finances.budget.spent;
+        finances.balance -= amount;
         
-        const div = document.createElement('div');
-        div.className = 'habit-card';
-        div.onclick = () => toggleHabit(habit.id);
-        div.innerHTML = `
-            <h4>${habit.name}</h4>
-            <div class="habit-streak">${habit.streak} 🔥</div>
-            <div class="habit-status">${completedToday ? '✅ Hoje' : '⚪ Pendente'}</div>
-        `;
-        habitsGrid.appendChild(div);
-    });
+        // Adicionar à categoria correspondente
+        const categoryIndex = finances.categories.findIndex(c => 
+            c.name.toLowerCase() === getCategoryName(category).toLowerCase());
+        
+        if (categoryIndex !== -1) {
+            finances.categories[categoryIndex].value += amount;
+        }
+    }
+    
+    // Recalcular taxa de economia
+    finances.savingsRate = ((finances.savings / finances.income) * 100).toFixed(1);
+    
+    // Salvar e atualizar
+    saveData('finances', finances);
+    loadFinances();
+    closeTransactionModal();
+    
+    showToast("💰 Transação adicionada com sucesso!");
 }
 
-function toggleHabit(id) {
-    const habit = habits.find(h => h.id === id);
-    const today = new Date().toDateString();
+function getCategoryName(categoryKey) {
+    const categories = {
+        'salary': 'Salário',
+        'food': 'Alimentação',
+        'transport': 'Transporte',
+        'entertainment': 'Lazer',
+        'health': 'Saúde',
+        'education': 'Educação',
+        'other': 'Outros'
+    };
+    return categories[categoryKey] || 'Outros';
+}
+
+// ===== MÓDULO: ROTINA =====
+function loadRoutine() {
+    // Atualizar estatísticas
+    document.querySelector('.routine-stats .stat-card:first-child h3').textContent = 
+        routine.mostDone.name;
+    document.querySelector('.routine-stats .stat-card:first-child p').textContent = 
+        `${routine.mostDone.count}x`;
     
+    document.querySelector('.routine-stats .stat-card:last-child h3').textContent = 
+        routine.month.name;
+    document.querySelector('.routine-stats .stat-card:last-child p').textContent = 
+        `${routine.month.activeDays} ativos`;
+    
+    // Atualizar hoje
+    document.getElementById('todayDate').textContent = `HOJE - ${routine.today.date}`;
+    document.getElementById('todayCompleted').textContent = 
+        `${routine.today.completed}/${routine.today.total}`;
+    document.getElementById('todayPercentage').textContent = 
+        `${routine.today.percentage}%`;
+    
+    // Carregar hábitos
+    loadHabits();
+    
+    // Atualizar gráfico da semana
+    updateWeekChart();
+}
+
+function loadHabits() {
+    const habitsList = document.getElementById('habitsList');
+    habitsList.innerHTML = '';
+    
+    // Ordenar hábitos: completados primeiro
+    const sortedHabits = [...routine.habits].sort((a, b) => 
+        (a.completed === b.completed) ? 0 : a.completed ? -1 : 1
+    );
+    
+    sortedHabits.forEach(habit => {
+        const habitItem = document.createElement('div');
+        habitItem.className = 'habit-item';
+        habitItem.innerHTML = `
+            <div class="habit-checkbox ${habit.completed ? 'checked' : ''}" 
+                 onclick="toggleHabit(${habit.id})">
+                ${habit.completed ? '✓' : ''}
+            </div>
+            <div class="habit-info">
+                <span class="habit-name">${habit.name}</span>
+                <span class="habit-points">+${habit.points}</span>
+            </div>
+            <div class="habit-streak">${habit.streak} 🔥</div>
+        `;
+        habitsList.appendChild(habitItem);
+    });
+    
+    // Atualizar contadores
+    updateHabitCounters();
+}
+
+function toggleHabit(habitId) {
+    const habit = routine.habits.find(h => h.id === habitId);
     if (!habit) return;
     
-    const completedToday = habit.completions.includes(today);
+    habit.completed = !habit.completed;
     
-    if (completedToday) {
-        // Remover completação de hoje
-        habit.completions = habit.completions.filter(d => d !== today);
-        habit.streak = calculateStreak(habit.completions);
-        addXP(-15);
+    // Atualizar contadores
+    if (habit.completed) {
+        routine.today.completed++;
+        habit.streak++;
+        
+        // Atualizar "mais feito"
+        if (habit.streak > routine.mostDone.count) {
+            routine.mostDone = { name: habit.name, count: habit.streak };
+        }
+        
+        showToast(`✅ ${habit.name} completado! +${habit.points} pontos`);
     } else {
-        // Adicionar completação
-        habit.completions.push(today);
-        habit.streak = calculateStreak(habit.completions);
-        addXP(15);
-        
-        // Bônus por sequência
-        if (habit.streak % 7 === 0) {
-            addXP(50);
-            alert(`🎉 ${habit.streak} dias seguidos! +50 XP bônus!`);
-        }
+        routine.today.completed--;
+        habit.streak = Math.max(0, habit.streak - 1);
     }
     
-    saveHabits();
-    loadHabits();
-    updateDashboard();
+    // Recalcular porcentagem
+    routine.today.percentage = Math.round((routine.today.completed / routine.today.total) * 100);
+    
+    // Salvar e atualizar
+    saveData('routine', routine);
+    loadRoutine();
 }
 
-function calculateStreak(completions) {
-    if (completions.length === 0) return 0;
+function addNewHabit() {
+    const nameInput = document.getElementById('newHabitInput');
+    const pointsInput = document.getElementById('habitPoints');
     
-    const sortedDates = completions.map(d => new Date(d)).sort((a, b) => b - a);
-    let streak = 1;
-    let currentDate = new Date(sortedDates[0]);
+    const name = nameInput.value.trim();
+    const points = parseInt(pointsInput.value) || 25;
     
-    for (let i = 1; i < sortedDates.length; i++) {
-        const prevDate = new Date(currentDate);
-        prevDate.setDate(prevDate.getDate() - 1);
+    if (!name) {
+        showToast("⚠️ Digite um nome para o hábito!");
+        nameInput.focus();
+        return;
+    }
+    
+    const newHabit = {
+        id: Date.now(),
+        name: name,
+        points: points,
+        completed: false,
+        streak: 0
+    };
+    
+    routine.habits.push(newHabit);
+    routine.today.total++;
+    
+    // Limpar inputs
+    nameInput.value = '';
+    pointsInput.value = '25';
+    
+    // Salvar e atualizar
+    saveData('routine', routine);
+    loadRoutine();
+    
+    showToast(`⚡ Novo hábito "${name}" adicionado!`);
+}
+
+function updateHabitCounters() {
+    // Atualizar contadores no cabeçalho
+    document.getElementById('todayCompleted').textContent = 
+        `${routine.today.completed}/${routine.today.total}`;
+    document.getElementById('todayPercentage').textContent = 
+        `${routine.today.percentage}%`;
+    
+    // Atualizar contador de dias ativos do mês
+    if (routine.today.completed > 0) {
+        const today = new Date().toDateString();
+        const activeDays = JSON.parse(localStorage.getItem('activeDays') || '[]');
         
-        if (sortedDates[i].toDateString() === prevDate.toDateString()) {
-            streak++;
-            currentDate = sortedDates[i];
+        if (!activeDays.includes(today)) {
+            activeDays.push(today);
+            localStorage.setItem('activeDays', JSON.stringify(activeDays));
+            routine.month.activeDays = activeDays.length;
+            saveData('routine', routine);
+        }
+    }
+}
+
+function updateWeekChart() {
+    // Atualizar barras da semana
+    const weekBars = document.querySelectorAll('.day-bar');
+    const todayIndex = new Date().getDay(); // 0 = Domingo, 6 = Sábado
+    
+    weekBars.forEach((bar, index) => {
+        // Remover classe active de todas
+        bar.classList.remove('active');
+        
+        // Definir valores (simulação)
+        const values = [80, 60, 90, 40, 70, 14, 0];
+        bar.setAttribute('data-value', values[index]);
+        bar.style.setProperty('--value', values[index]);
+        
+        // Marcar hoje como ativo
+        if (index === todayIndex - 1) { // Ajuste para nossa ordem (Seg-Sáb)
+            bar.classList.add('active');
+        }
+    });
+}
+
+// ===== MÓDULO: ATLAS/TRILHAS =====
+function loadTrails() {
+    const timeline = document.querySelector('.trail-timeline');
+    if (!timeline) return;
+    
+    timeline.innerHTML = '';
+    
+    const trail = trails[0];
+    if (!trail) return;
+    
+    // Atualizar cabeçalho da trilha
+    document.querySelector('.trail-header h3').textContent = 
+        `TRILHA A - ${trail.name}`;
+    document.querySelector('.progress-value').textContent = 
+        `${trail.progress}%`;
+    
+    // Atualizar estatísticas
+    document.querySelectorAll('.trail-stat')[0].querySelector('strong').textContent = 
+        `${trail.completedDays}/${trail.totalDays}`;
+    document.querySelectorAll('.trail-stat')[1].querySelector('strong').textContent = 
+        `${trail.currentStreak} dias`;
+    document.querySelectorAll('.trail-stat')[2].querySelector('strong').textContent = 
+        trail.level;
+    
+    // Criar linha do tempo
+    for (let i = 1; i <= trail.totalDays; i++) {
+        const dayElement = document.createElement('div');
+        dayElement.className = 'timeline-day';
+        dayElement.textContent = i;
+        
+        if (i <= trail.completedDays) {
+            dayElement.classList.add('completed');
+            dayElement.title = `Dia ${i} - Concluído`;
+        } else if (i === trail.completedDays + 1) {
+            dayElement.classList.add('current');
+            dayElement.title = `Dia ${i} - Em progresso`;
         } else {
-            break;
+            dayElement.classList.add('future');
+            dayElement.title = `Dia ${i} - Futuro`;
         }
+        
+        dayElement.onclick = () => toggleTrailDay(i);
+        timeline.appendChild(dayElement);
     }
-    
-    return streak;
 }
 
-function addHabit() {
-    const name = prompt('Nome do novo hábito:');
-    if (name && name.trim()) {
-        const habit = {
-            id: Date.now(),
-            name: name.trim(),
-            streak: 0,
-            completions: [],
-            xpValue: 15
+function toggleTrailDay(day) {
+    const trail = trails[0];
+    if (!trail) return;
+    
+    if (day <= trail.completedDays) {
+        // Desmarcar dia
+        trail.completedDays = day - 1;
+        showToast(`⏪ Dia ${day} desmarcado`);
+    } else if (day === trail.completedDays + 1) {
+        // Marcar dia
+        trail.completedDays = day;
+        trail.currentStreak++;
+        
+        // Verificar se quebrou a sequência anterior
+        if (day > 1) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
+            const lastCompletion = localStorage.getItem('lastTrailCompletion');
+            
+            if (lastCompletion !== yesterdayStr) {
+                trail.currentStreak = 1;
+                showToast("🔁 Sequência reiniciada");
+            }
+        }
+        
+        localStorage.setItem('lastTrailCompletion', new Date().toDateString());
+        showToast(`✅ Dia ${day} concluído! Sequência: ${trail.currentStreak} dias`);
+        
+        // Atualizar nível
+        if (trail.completedDays >= 60) {
+            trail.level = "Avançado";
+        } else if (trail.completedDays >= 30) {
+            trail.level = "Intermediário";
+        }
+    } else {
+        showToast("⚠️ Complete os dias anteriores primeiro!");
+        return;
+    }
+    
+    // Recalcular progresso
+    trail.progress = Math.round((trail.completedDays / trail.totalDays) * 100);
+    
+    // Salvar e atualizar
+    saveData('trails', trails);
+    loadTrails();
+}
+
+function createNewTrail() {
+    const nameInput = document.getElementById('trailName');
+    const daysInput = document.getElementById('trailDays');
+    
+    const name = nameInput.value.trim();
+    const days = parseInt(daysInput.value);
+    
+    if (!name || isNaN(days) || days < 1) {
+        showToast("⚠️ Preencha todos os campos corretamente!");
+        return;
+    }
+    
+    if (days > 365) {
+        showToast("⚠️ A trilha não pode ter mais de 365 dias!");
+        return;
+    }
+    
+    const newTrail = {
+        id: Date.now(),
+        name: name.toUpperCase(),
+        type: `Trilha ${String.fromCharCode(65 + trails.length)}`,
+        totalDays: days,
+        completedDays: 0,
+        currentStreak: 0,
+        level: "Iniciante",
+        progress: 0
+    };
+    
+    trails.push(newTrail);
+    
+    // Limpar inputs
+    nameInput.value = '';
+    daysInput.value = '';
+    
+    // Salvar e atualizar
+    saveData('trails', trails);
+    loadTrails();
+    
+    showToast(`🗺️ Nova trilha "${name}" criada!`);
+}
+
+// ===== MÓDULO: METAS =====
+function loadGoals() {
+    const goalsGrid = document.querySelector('.goals-grid');
+    if (!goalsGrid) return;
+    
+    // Carregar metas salvas
+    if (goals.length === 0) {
+        goals = [
+            {
+                id: 1,
+                title: "Economizar R$ 10.000",
+                description: "Reserva de emergência completa",
+                category: "finance",
+                deadline: "2026-06-30",
+                value: 10000,
+                progress: 65,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 2,
+                title: "Ler 12 livros",
+                description: "Um livro por mês",
+                category: "learning",
+                deadline: "2026-12-31",
+                value: 12,
+                progress: 25,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 3,
+                title: "Perder 5kg",
+                description: "Alcançar peso ideal",
+                category: "health",
+                deadline: "2026-03-31",
+                value: 5,
+                progress: 40,
+                createdAt: new Date().toISOString()
+            }
+        ];
+        saveData('goals', goals);
+    }
+    
+    goalsGrid.innerHTML = '';
+    
+    goals.forEach(goal => {
+        const goalCard = document.createElement('div');
+        goalCard.className = `goal-card ${goal.category}`;
+        goalCard.innerHTML = `
+            <div class="goal-header">
+                <h4 class="goal-title">${goal.title}</h4>
+                <div class="goal-actions">
+                    <button class="goal-action-btn" onclick="editGoal(${goal.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="goal-action-btn" onclick="deleteGoal(${goal.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <p class="goal-description">${goal.description}</p>
+            <div class="goal-progress">
+                <div class="goal-progress-bar">
+                    <div class="goal-progress-fill" style="width: ${goal.progress}%"></div>
+                </div>
+                <div class="goal-progress-text">
+                    <span>${goal.progress}%</span>
+                    <span>${formatCurrency(goal.value)}</span>
+                </div>
+            </div>
+            <div class="goal-deadline">
+                <i class="far fa-calendar"></i>
+                <span>${formatDate(goal.deadline)}</span>
+            </div>
+        `;
+        goalsGrid.appendChild(goalCard);
+    });
+}
+
+function addNewGoal() {
+    const titleInput = document.getElementById('goalTitle');
+    const descInput = document.getElementById('goalDescription');
+    const categoryInput = document.getElementById('goalCategory');
+    const deadlineInput = document.getElementById('goalDeadline');
+    const valueInput = document.getElementById('goalValue');
+    
+    const title = titleInput.value.trim();
+    const description = descInput.value.trim();
+    const category = categoryInput.value;
+    const deadline = deadlineInput.value;
+    const value = parseFloat(valueInput.value) || 0;
+    
+    if (!title || !deadline) {
+        showToast("⚠️ Preencha título e data limite!");
+        return;
+    }
+    
+    const newGoal = {
+        id: Date.now(),
+        title: title,
+        description: description,
+        category: category,
+        deadline: deadline,
+        value: value,
+        progress: 0,
+        createdAt: new Date().toISOString()
+    };
+    
+    goals.push(newGoal);
+    
+    // Limpar formulário
+    titleInput.value = '';
+    descInput.value = '';
+    categoryInput.value = 'finance';
+    deadlineInput.value = '';
+    valueInput.value = '';
+    
+    // Salvar e atualizar
+    saveData('goals', goals);
+    loadGoals();
+    
+    showToast(`🎯 Nova meta "${title}" adicionada!`);
+}
+
+function editGoal(goalId) {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    
+    // Preencher formulário com dados da meta
+    document.getElementById('goalTitle').value = goal.title;
+    document.getElementById('goalDescription').value = goal.description;
+    document.getElementById('goalCategory').value = goal.category;
+    document.getElementById('goalDeadline').value = goal.deadline;
+    document.getElementById('goalValue').value = goal.value;
+    
+    // Rolar para o formulário
+    document.querySelector('.add-goal-card').scrollIntoView({ behavior: 'smooth' });
+    
+    showToast(`📝 Editando meta "${goal.title}"`);
+}
+
+function deleteGoal(goalId) {
+    if (!confirm("Tem certeza que deseja excluir esta meta?")) return;
+    
+    goals = goals.filter(g => g.id !== goalId);
+    saveData('goals', goals);
+    loadGoals();
+    
+    showToast("🗑️ Meta excluída!");
+}
+
+// ===== MÓDULO: MENU =====
+function loadMenuStats() {
+    // Atualizar estatísticas do menu
+    document.getElementById('totalHabits').textContent = routine.habits.length;
+    document.getElementById('totalTransactions').textContent = finances.transactions.length;
+    document.getElementById('totalGoals').textContent = goals.length;
+    
+    // Calcular dias ativos
+    const activeDays = JSON.parse(localStorage.getItem('activeDays') || '[]');
+    document.getElementById('totalDays').textContent = activeDays.length;
+}
+
+function exportAllData() {
+    const allData = {
+        finances: finances,
+        routine: routine,
+        trails: trails,
+        goals: goals,
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+    };
+    
+    const dataStr = JSON.stringify(allData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    
+    const exportFileName = `dashboard-backup-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileName);
+    linkElement.click();
+    
+    showToast("📤 Dados exportados com sucesso!");
+}
+
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function() {
+            try {
+                const importedData = JSON.parse(reader.result);
+                
+                if (!importedData.finances || !importedData.routine) {
+                    throw new Error("Arquivo inválido");
+                }
+                
+                if (confirm("Importar dados? Isso substituirá seus dados atuais.")) {
+                    finances = importedData.finances;
+                    routine = importedData.routine;
+                    trails = importedData.trails || [];
+                    goals = importedData.goals || [];
+                    
+                    // Salvar tudo
+                    saveAllData();
+                    
+                    // Recarregar tudo
+                    loadFinances();
+                    loadRoutine();
+                    loadTrails();
+                    loadGoals();
+                    loadMenuStats();
+                    
+                    showToast("📥 Dados importados com sucesso!", "success");
+                }
+            } catch (err) {
+                showToast("❌ Erro ao importar dados!", "error");
+            }
         };
         
-        habits.push(habit);
-        saveHabits();
-        loadHabits();
+        reader.readAsText(file);
+    };
+    
+    input.click();
+}
+
+function clearAllData() {
+    if (!confirm("⚠️ TEM CERTEZA? Isso apagará TODOS os seus dados permanentemente!")) {
+        return;
+    }
+    
+    // Limpar todos os dados
+    finances = {
+        income: 0,
+        expenses: 0,
+        savings: 0,
+        balance: 0,
+        savingsRate: 0,
+        budget: { total: 0, spent: 0, remaining: 0 },
+        categories: [],
+        transactions: []
+    };
+    
+    routine = {
+        mostDone: { name: "Nenhum", count: 0 },
+        month: { name: new Date().toLocaleString('pt-BR', { month: 'long' }), activeDays: 0 },
+        today: { date: "", completed: 0, total: 0, percentage: 0 },
+        habits: []
+    };
+    
+    trails = [];
+    goals = [];
+    
+    // Limpar localStorage
+    localStorage.clear();
+    
+    // Recarregar tudo
+    loadFinances();
+    loadRoutine();
+    loadTrails();
+    loadGoals();
+    loadMenuStats();
+    
+    showToast("🗑️ Todos os dados foram apagados!", "warning");
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const currentTheme = body.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    body.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    showToast(newTheme === 'dark' ? "🌙 Tema escuro ativado" : "☀️ Tema claro ativado");
+}
+
+function showConfig() {
+    showToast("⚙️ Configurações (em desenvolvimento)");
+}
+
+function showAbout() {
+    showToast("📱 Dashboard v1.0 • Desenvolvido com ❤️");
+}
+
+// ===== SISTEMA DE PERSISTÊNCIA =====
+function loadAllData() {
+    // Carregar tema
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
+    
+    // Carregar dados
+    finances = loadData('finances', finances);
+    routine = loadData('routine', routine);
+    trails = loadData('trails', trails);
+    goals = loadData('goals', goals);
+}
+
+function loadData(key, defaultValue) {
+    try {
+        const saved = localStorage.getItem(key);
+        return saved ? JSON.parse(saved) : defaultValue;
+    } catch (err) {
+        console.error(`Erro ao carregar ${key}:`, err);
+        return defaultValue;
     }
 }
 
-function saveHabits() {
-    localStorage.setItem('habits', JSON.stringify(habits));
+function saveData(key, data) {
+    try {
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (err) {
+        console.error(`Erro ao salvar ${key}:`, err);
+        showToast("❌ Erro ao salvar dados!", "error");
+    }
 }
 
-// Sistema de Gamificação
-function addXP(amount) {
-    totalXP += amount;
-    if (totalXP < 0) totalXP = 0;
-    
-    localStorage.setItem('totalXP', totalXP.toString());
-    updateDashboard();
+function saveAllData() {
+    saveData('finances', finances);
+    saveData('routine', routine);
+    saveData('trails', trails);
+    saveData('goals', goals);
 }
 
-function getCurrentRank() {
-    const xp = totalXP;
-    let currentRank = 'RECRUTA';
+// ===== UTILITÁRIOS =====
+function formatCurrency(value) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2
+    }).format(value);
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
     
-    for (const [requiredXP, rank] of Object.entries(RANKS)) {
-        if (xp >= requiredXP) {
-            currentRank = rank;
-        } else {
-            break;
+    // Definir cor baseada no tipo
+    const colors = {
+        'info': '#4f46e5',
+        'success': '#10b981',
+        'error': '#ef4444',
+        'warning': '#f59e0b'
+    };
+    
+    toast.textContent = message;
+    toast.style.background = colors[type] || colors.info;
+    toast.style.display = 'block';
+    
+    // Esconder após 3 segundos
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 3000);
+}
+
+function setupEventListeners() {
+    // Fechar modal ao clicar fora
+    window.onclick = function(event) {
+        const modal = document.getElementById('transactionModal');
+        if (event.target === modal) {
+            closeTransactionModal();
         }
-    }
+    };
     
-    return currentRank;
+    // Tecla ESC fecha modal
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeTransactionModal();
+        }
+    });
 }
 
-function updateDashboard() {
-    document.getElementById('totalXP').textContent = totalXP;
-    document.getElementById('currentRank').textContent = getCurrentRank();
-    
-    // Atualizar progresso do sprint
-    const sprintProgress = (sprintDay / 60) * 100;
-    document.getElementById('sprintProgress').style.width = `${sprintProgress}%`;
-    document.getElementById('currentDay').textContent = sprintDay;
+// ===== INICIALIZAÇÃO DO SERVICE WORKER (PWA) =====
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(registration => {
+                console.log('Service Worker registrado:', registration.scope);
+            })
+            .catch(error => {
+                console.log('Falha no Service Worker:', error);
+            });
+    });
 }
-
-// Sistema de Metas
-function updateGoal() {
-    const goalInput = document.getElementById('mainGoal');
-    currentGoal = goalInput.value;
-    localStorage.setItem('currentGoal', currentGoal);
-    alert('Meta salva!');
-    
-    // Adicionar XP por definir meta
-    addXP(25);
-}
-
-// Sistema de Notificações
-function showNotification(title, message) {
-    if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(title, { body: message });
-    }
-}
-
-// Incrementar dia do sprint (executar uma vez por dia)
-function incrementSprintDay() {
-    const lastUpdate = localStorage.getItem('lastSprintUpdate');
-    const today = new Date().toDateString();
-    
-    if (lastUpdate !== today) {
-        sprintDay++;
-        if (sprintDay > 60) sprintDay = 1; // Reiniciar sprint
-        
-        localStorage.setItem('sprintDay', sprintDay.toString());
-        localStorage.setItem('lastSprintUpdate', today);
-        updateDashboard();
-        
-        // Notificação diária
-        showNotification('📊 Seu Dashboard', `Dia ${sprintDay}/60 do sprint!`);
-    }
-}
-
-// Executar ao carregar
-incrementSprintDay();
