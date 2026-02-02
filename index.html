@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Sistema de Gestão</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <div class="container">
+        <!-- Dashboard Principal -->
+        <header class="dashboard">
+            <h1>📊 Meu Dashboard</h1>
+            <div class="stats">
+                <div class="stat-card">
+                    <span class="stat-label">XP Total</span>
+                    <span class="stat-value" id="totalXP">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Rank</span>
+                    <span class="stat-value" id="currentRank">RECRUTA</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Saldo</span>
+                    <span class="stat-value" id="currentBalance">R$ 0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Abas/Navegação -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="tasks">📋 Tarefas</button>
+            <button class="tab" data-tab="finances">💰 Finanças</button>
+            <button class="tab" data-tab="habits">⚡ Hábitos</button>
+            <button class="tab" data-tab="goals">🎯 Metas</button>
+        </nav>
+
+        <!-- Conteúdo das Abas -->
+        <main>
+            <!-- ABA: Tarefas -->
+            <section id="tasks-tab" class="tab-content active">
+                <h2>Tarefas de Hoje</h2>
+                <div class="task-input">
+                    <input type="text" id="newTask" placeholder="Nova tarefa...">
+                    <button onclick="addTask()">+</button>
+                </div>
+                <ul id="taskList"></ul>
+                <div class="progress">
+                    <div class="progress-bar" id="taskProgress"></div>
+                    <span id="taskCount">0/0 concluídas</span>
+                </div>
+            </section>
+
+            <!-- ABA: Finanças -->
+            <section id="finances-tab" class="tab-content">
+                <h2>Controle Financeiro</h2>
+                <div class="finance-input">
+                    <select id="transactionType">
+                        <option value="income">Receita</option>
+                        <option value="expense">Despesa</option>
+                    </select>
+                    <input type="text" id="transactionDesc" placeholder="Descrição">
+                    <input type="number" id="transactionAmount" placeholder="R$ 0,00">
+                    <button onclick="addTransaction()">Registrar</button>
+                </div>
+                <div class="balance">
+                    <h3>Saldo: <span id="balanceValue">R$ 0,00</span></h3>
+                </div>
+                <ul id="transactionList"></ul>
+            </section>
+
+            <!-- ABA: Hábitos -->
+            <section id="habits-tab" class="tab-content">
+                <h2>Meus Hábitos</h2>
+                <div class="habits-grid" id="habitsGrid"></div>
+                <button class="btn-add" onclick="addHabit()">+ Novo Hábito</button>
+            </section>
+
+            <!-- ABA: Metas -->
+            <section id="goals-tab" class="tab-content">
+                <h2>Sprint de 60 Dias</h2>
+                <div class="goal-card">
+                    <h3>Meta Principal</h3>
+                    <input type="text" id="mainGoal" placeholder="Ex: Aprender Python">
+                    <div class="sprint-progress">
+                        <div class="progress-bar" id="sprintProgress"></div>
+                        <span>Dia <span id="currentDay">1</span>/60</span>
+                    </div>
+                    <button onclick="updateGoal()">Salvar Meta</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
